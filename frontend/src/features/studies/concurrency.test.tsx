@@ -9,7 +9,7 @@ import {ProtocolEditor} from './ProtocolEditor';
 import {StudyDetail} from './StudyDetail';
 import type {Study} from './api';
 vi.mock('../auth/AuthProvider',()=>({useActor:()=>({role:'tenant_admin'})}));
-const original={id:'s',revision:1,name:'研究',code:'001',state:'draft',editable:true,protocol_frozen:false,owner_id:'d1',members:[{id:'d1',name:'医生甲'}],stages:[{name:'基线期',kind:'baseline',offset_days:0,window_before:0,window_after:3,bindings:[]}]} as Study;
+const original:Study={organization:'',description:'',owner_name:'医生甲',planned_start:null,planned_end:null,deleted_at:null,id:'s',revision:1,name:'研究',code:'001',state:'draft',editable:true,protocol_frozen:false,owner_id:'d1',members:[{id:'d1',name:'医生甲'}],stages:[{name:'基线期',kind:'baseline',offset_days:0,window_before:0,window_after:3,bindings:[]}]};
 const conflict={code:'revision_conflict',message:'内容已被修改，请刷新后重试',fields:{}};
 const server=setupServer(http.get('*/api/auth/csrf/',()=>HttpResponse.json({csrf_token:'csrf'})),http.get('*/api/forms/version-options/',()=>HttpResponse.json({results:[],count:0})),http.get('*/api/studies/s/',()=>HttpResponse.json(original)),http.get('*/api/studies/s/subjects/',()=>HttpResponse.json({results:[],count:0})),http.get('*/api/doctors/options/',()=>HttpResponse.json({results:[{id:'d1',name:'医生甲'},{id:'d2',name:'医生乙'},{id:'d3',name:'医生丙'}]})));
 beforeAll(()=>server.listen({onUnhandledRequest:'error'}));afterEach(()=>server.resetHandlers());afterAll(()=>server.close());

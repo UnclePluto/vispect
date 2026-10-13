@@ -21,7 +21,7 @@ def test_core_workflow_mutations_leave_audit_events(world):
     from apps.core.context import tenant_transaction
     from apps.core.models import AuditEvent
     e,v,b=world.entry('a');a=world.actor('a','doctor');admin=world.actor('a','tenant_admin')
-    draft=save_answer_draft(a,v.id,b.id,{'q1':'草稿'},0);answer=submit_answer(a,v.id,b.id,{'q1':'提交'},'s');revise_answer(a,answer.id,{'q1':'修正'},'纠正',answer.revision)
+    draft=save_answer_draft(a,v.id,b.id,{'q1':'草稿'},0);answer=submit_answer(a,v.id,b.id,{'q1':'提交'},'s',draft.revision);revise_answer(a,answer.id,{'q1':'修正'},'纠正',answer.revision)
     complete_visit(a,v.id,'c');stop_followup(a,e.id,'other','停止原因','stop');export_answers(a,study_id=e.study_id)
     with tenant_transaction(a.tenant_id):p=e.patient
     p=update_patient(admin,p.id,{'name':'更名'},p.revision);p=assign_doctors(admin,p.id,[a.doctor_id],p.revision);p=delete_patient(admin,p.id,p.revision);restore_patient(admin,p.id,p.revision)
