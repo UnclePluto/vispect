@@ -10,3 +10,7 @@ def visible_enrollments(actor):
 def visible_visits(actor):
     require_tenant(actor)
     return VisitInstance.objects.filter(tenant_id=actor.tenant_id,deleted_at__isnull=True,enrollment_id__in=visible_enrollments(actor).values('id'))
+
+def visible_answers(actor):
+    from .models import Answer
+    return Answer.objects.filter(tenant_id=actor.tenant_id,deleted_at__isnull=True,visit_id__in=visible_visits(actor).values('id'))

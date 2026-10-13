@@ -58,3 +58,33 @@ class VisitsView(APIView):
         return Response(paginate(query,request,visit_payload))
 class VisitDetailView(APIView):
     def get(self,request,visit_id):return Response(visit_payload(get_object(visible_visits(current_actor(request)),visit_id),True))
+
+from .answers import save_answer_draft,submit_answer,revise_answer
+from .transitions import complete_visit,stop_followup
+from .selectors import visible_answers
+from .serializers import answer_payload
+class AnswerWriteSerializer(serializers.Serializer):
+    binding_id=serializers.UUIDField()
+    answers=serializers.JSONField()
+    action=serializers.ChoiceField(choices=['draft','submit'])
+    expected_revision=serializers.IntegerField(required=False,min_value=0)
+class VisitAnswersView(APIView):
+    def get(self,request,visit_id):
+        actor=current_actor(request);get_object(visible_visits(actor),visit_id)
+        return Response({'results':[answer_payload(a) for a in visible_answers(actor).filter(visit_id=visit_id).select_related('recorded_by')]})
+    def post(self,request,visit_id):
+        actor=current_actor(request);data=AnswerWriteSerializer(data=request.data);data.is_valid(raise_exception=True);values=data.validated_data
+        if values['action']=='draft':
+            if 'expected_revision' not in values:raise serializers.ValidationError({'expected_revision':['请提供答案修订号']})
+            answer=save_answer_draft(actor,visit_id,values['binding_id'],values['answers'],values['expected_revision'])
+        else:answer=submit_answer(actor,visit_id,values['binding_id'],values['answers'],request.headers.get('Idempotency-Key',''))
+        return Response(answer_payload(answer))
+class AnswerDetailView(APIView):
+    def get(self,request,answer_id):return Response(answer_payload(get_object(visible_answers(current_actor(request)),answer_id)))
+class AnswerReviseView(APIView):
+    def post(self,request,answer_id):
+        return Response(answer_payload(revise_answer(current_actor(request),answer_id,request.data.get('answers'),request.data.get('reason'),edit_revision(request))))
+class VisitCompleteView(APIView):
+    def post(self,request,visit_id):return Response(visit_payload(complete_visit(current_actor(request),visit_id,request.headers.get('Idempotency-Key',''))))
+class EnrollmentStopView(APIView):
+    def post(self,request,enrollment_id):return Response(enrollment_payload(stop_followup(current_actor(request),enrollment_id,request.data.get('stop_type'),request.data.get('reason'),request.headers.get('Idempotency-Key',''))))

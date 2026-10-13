@@ -85,11 +85,21 @@ class TestWorld:
         form=create_form(actor,definition or {'protocol_version':1,'title':'测试表单','questions':[{'id':'q1','type':'text','title':'测试题目','required':True}]})
         return publish_form(actor,form.id,form.revision,uuid.uuid4().hex)
 
-    def study(self,tenant,screening=False):
+    def study(self,tenant,screening=False,definition=None):
         from apps.studies.services import create_study,save_protocol,set_study_state
-        actor=self.actor(tenant,'doctor');version=self.form_version(tenant)
+        actor=self.actor(tenant,'doctor');version=self.form_version(tenant,definition)
         s=create_study(actor,{'name':'测试研究','code':uuid.uuid4().hex[:10]})
         def stage(kind,offset):return {'name':kind,'kind':kind,'offset_days':offset,'window_before':0,'window_after':3,'bindings':[{'form_version_id':str(version.id),'respondent':'patient','required':True}]}
         stages=([stage('screening',0)] if screening else [])+[stage('baseline',0),stage('followup',30)]
         s=save_protocol(actor,s.id,stages,s.revision)
         return set_study_state(actor,s.id,'active',s.revision)
+
+    def entry(self,tenant,definition=None):
+        from apps.followups.enrollments import add_subject,confirm_enrollment
+        from apps.core.context import tenant_transaction
+        a=self.actor(tenant,'doctor');s=self.study(tenant,definition=definition);p=self.patient(tenant)
+        e=add_subject(a,s.id,p.id,a.doctor_id,uuid.uuid4().hex[:8],uuid.uuid4().hex)
+        e=confirm_enrollment(a,e.id,uuid.uuid4().hex[:8],e.added_on,uuid.uuid4().hex)
+        with tenant_transaction(a.tenant_id):
+            v=e.current_visit;b=v.stage.bindings.select_related('form_version__form').first()
+        return e,v,b

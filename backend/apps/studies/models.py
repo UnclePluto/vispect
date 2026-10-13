@@ -40,4 +40,4 @@ class FormBinding(TenantRecord):
     required=models.BooleanField(default=True)
     class Meta:
         ordering=['created_at','id']
-        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['stage','form_version','respondent'],name='stage_form_respondent')]
+        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['stage','form_version','respondent'],name='stage_form_respondent'),models.UniqueConstraint(fields=['tenant','id','stage','form_version','respondent'],name='binding_tenant_id_stage_version_respondent')]

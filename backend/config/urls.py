@@ -18,3 +18,6 @@ urlpatterns += [path('api/studies/',StudiesView.as_view()),path('api/studies/<uu
 
 from apps.followups.api import StudySubjectsView,EnrollmentDetailView,EnrollmentConfirmView,EnrollmentTransferView,VisitsView,VisitDetailView
 urlpatterns += [path('api/studies/<uuid:study_id>/subjects/',StudySubjectsView.as_view()),path('api/enrollments/<uuid:enrollment_id>/',EnrollmentDetailView.as_view()),path('api/enrollments/<uuid:enrollment_id>/confirm/',EnrollmentConfirmView.as_view()),path('api/enrollments/<uuid:enrollment_id>/transfer/',EnrollmentTransferView.as_view()),path('api/visits/',VisitsView.as_view()),path('api/visits/<uuid:visit_id>/',VisitDetailView.as_view())]
+
+from apps.followups.api import VisitAnswersView,AnswerDetailView,AnswerReviseView,VisitCompleteView,EnrollmentStopView
+urlpatterns += [path('api/visits/<uuid:visit_id>/answers/',VisitAnswersView.as_view()),path('api/visits/<uuid:visit_id>/complete/',VisitCompleteView.as_view()),path('api/answers/<uuid:answer_id>/',AnswerDetailView.as_view()),path('api/answers/<uuid:answer_id>/revise/',AnswerReviseView.as_view()),path('api/enrollments/<uuid:enrollment_id>/stop/',EnrollmentStopView.as_view())]

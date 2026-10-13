@@ -194,11 +194,11 @@
 
 **接口：** 消费任务 6 的 `evaluate_answers`、任务 10 的可见访视和当前阶段、任务 3 的幂等和审计。提供 `save_answer_draft(actor, visit_id: UUID, binding_id: UUID, answers: dict, expected_revision: int) -> Answer`、`submit_answer(actor, visit_id: UUID, binding_id: UUID, answers: dict, key: str) -> Answer`、`revise_answer(actor, answer_id: UUID, answers: dict, reason: str, expected_revision: int) -> Answer`、`complete_visit(actor, visit_id: UUID, key: str) -> VisitInstance`、`stop_followup(actor, enrollment_id: UUID, stop_type: str, reason: str, key: str) -> Enrollment`。尚无答案时草稿 `expected_revision=0`，首次保存产生 revision 1；状态为 `draft/submitted`。API `/api/visits/{id}/answers/`、`/complete/`、`/api/answers/{id}/revise/`、`/api/enrollments/{id}/stop/`。
 
-- [ ] 写 `test_completed_visit_answers_are_read_only`：`assert revise_response.status_code == 409`；`test_submission_retry_does_not_overwrite_answer`：`assert retried.id == original.id; assert retried.answers == original.answers`；`test_required_hidden_field_does_not_block_completion`：`assert visit.status == 'completed'`。修订必须有原因且保留原答案，患者表单记录代录人；暂停研究/表单拒绝写入，停止后不恢复，最后阶段完成使受试者 completed。
-- [ ] 运行 `uv run pytest tests/test_answers.py tests/test_transitions.py -q`，确认填写与转换服务缺失导致失败。
-- [ ] 实现答案绑定的唯一性和同租户、同访视定义、同版本复合约束，正式提交调用任务 6 引擎。幂等回执在当前数据授权通过后使用；修订号避免覆盖。完成访视必须所有 required 绑定已提交，筛选完成后仍需手动确认入组；完成后开启下阶段，停止时冻结未完成访视和历史答案。
-- [ ] 运行以上测试，补充独立连接的重复提交和并发完成；API 不能绕过当前阶段限制或编辑已完成/停止/结束数据。
-- [ ] 提交本任务文件，提交说明：`功能：实现答案填写修订和访视状态流转`。
+- [x] 写 `test_completed_visit_answers_are_read_only`：`assert revise_response.status_code == 409`；`test_submission_retry_does_not_overwrite_answer`：`assert retried.id == original.id; assert retried.answers == original.answers`；`test_required_hidden_field_does_not_block_completion`：`assert visit.status == 'completed'`。修订必须有原因且保留原答案，患者表单记录代录人；暂停研究/表单拒绝写入，停止后不恢复，最后阶段完成使受试者 completed。
+- [x] 运行 `uv run pytest tests/test_answers.py tests/test_transitions.py -q`，确认填写与转换服务缺失导致失败。
+- [x] 实现答案绑定的唯一性和同租户、同访视定义、同版本复合约束，正式提交调用任务 6 引擎。幂等回执在当前数据授权通过后使用；修订号避免覆盖。完成访视必须所有 required 绑定已提交，筛选完成后仍需手动确认入组；完成后开启下阶段，停止时冻结未完成访视和历史答案。
+- [x] 运行以上测试，补充独立连接的重复提交和并发完成；API 不能绕过当前阶段限制或编辑已完成/停止/结束数据。
+- [x] 提交本任务文件，提交说明：`功能：实现答案填写修订和访视状态流转`。
 
 ### Task 12: 授权 Excel 导出与修订查看
 

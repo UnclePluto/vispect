@@ -27,4 +27,29 @@ class VisitInstance(TenantRecord):
     completed_at=models.DateTimeField(null=True,blank=True)
     class Meta:
         ordering=['planned_on','id']
-        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['enrollment','stage'],name='enrollment_stage_once'),models.UniqueConstraint(fields=['tenant','enrollment','id'],name='visit_tenant_enrollment_id')]
+        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['enrollment','stage'],name='enrollment_stage_once'),models.UniqueConstraint(fields=['tenant','enrollment','id'],name='visit_tenant_enrollment_id'),models.UniqueConstraint(fields=['tenant','id','stage'],name='visit_tenant_id_stage')]
+
+class Answer(TenantRecord):
+    visit=models.ForeignKey(VisitInstance,on_delete=models.PROTECT,related_name='answers')
+    stage=models.ForeignKey('studies.VisitDefinition',on_delete=models.PROTECT)
+    binding=models.ForeignKey('studies.FormBinding',on_delete=models.PROTECT)
+    form_version=models.ForeignKey('forms.FormVersion',on_delete=models.PROTECT)
+    respondent=models.CharField(max_length=20,choices=[('doctor','医生'),('patient','患者')])
+    is_proxy=models.BooleanField(default=False)
+    recorded_by=models.ForeignKey('accounts.Account',on_delete=models.PROTECT)
+    answers=models.JSONField(default=dict)
+    status=models.CharField(max_length=20,default='draft',choices=[('draft','草稿'),('submitted','已提交')])
+    submitted_at=models.DateTimeField(null=True,blank=True)
+    class Meta:
+        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['visit','binding'],name='visit_binding_answer_once')]
+
+class AnswerRevision(TenantRecord):
+    answer=models.ForeignKey(Answer,on_delete=models.PROTECT,related_name='history')
+    previous_answers=models.JSONField()
+    previous_revision=models.PositiveIntegerField()
+    previous_recorded_by=models.ForeignKey('accounts.Account',on_delete=models.PROTECT,related_name='+')
+    actor=models.ForeignKey('accounts.Account',on_delete=models.PROTECT)
+    reason=models.TextField()
+    class Meta:
+        ordering=['-created_at','id']
+        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['answer','previous_revision'],name='answer_previous_revision_once')]
