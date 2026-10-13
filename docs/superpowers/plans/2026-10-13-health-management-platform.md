@@ -146,11 +146,11 @@
 
 **接口：** 消费任务 2、3 的事务/RLS/幂等/审计及任务 6 的 `validate_definition`。提供 `create_form(actor, definition: dict) -> Form`、`save_draft(actor, form_id: UUID, definition: dict, expected_revision: int) -> Form`、`publish_form(actor, form_id: UUID, expected_revision: int, key: str) -> FormVersion`、`set_form_paused(actor, form_id: UUID, paused: bool, expected_revision: int) -> Form`、`delete_form(actor, form_id: UUID, expected_revision: int) -> Form`、`restore_form(actor, form_id: UUID, expected_revision: int) -> Form`；`/api/forms/`、`/{id}/versions/`、`/publish/`、`/pause/`、`/resume/`。`FormVersion` 提供不可变 `definition`、版本号和 UUID。
 
-- [ ] 写 `test_new_version_preserves_old_definition`：发布 v1，改草稿并发布 v2，`assert v1.definition == original; assert v2.id != v1.id`；直接 SQL 修改 v1 定义失败。写医生不能改其他人草稿、已发布模板同租户可引用、跨租户不可读取、暂停不删除版本、旧 revision 返回 409 测试。
-- [ ] 运行 `uv run pytest tests/test_forms.py -q`，确认版本服务和权限未实现时失败。
-- [ ] 实现所有者/管理员编辑和公开的租户内发布目录、事务发布、数据库版本不可变保护及软删除。所有模型应用 RLS；发布使用任务 6 校验及任务 3 幂等工具。提供表单目录操作与版本信息。
-- [ ] 运行以上测试及前端构建，确认目录查询不包含答案，发布响应包含明确版本 UUID。
-- [ ] 提交本任务文件，提交说明：`功能：实现表单发布版本和目录管理`。
+- [x] 写 `test_new_version_preserves_old_definition`：发布 v1，改草稿并发布 v2，`assert v1.definition == original; assert v2.id != v1.id`；直接 SQL 修改 v1 定义失败。写医生不能改其他人草稿、已发布模板同租户可引用、跨租户不可读取、暂停不删除版本、旧 revision 返回 409 测试。
+- [x] 运行 `uv run pytest tests/test_forms.py -q`，确认版本服务和权限未实现时失败。
+- [x] 实现所有者/管理员编辑和公开的租户内发布目录、事务发布、数据库版本不可变保护及软删除。所有模型应用 RLS；发布使用任务 6 校验及任务 3 幂等工具。提供表单目录操作与版本信息。
+- [x] 运行以上测试及前端构建，确认目录查询不包含答案，发布响应包含明确版本 UUID。
+- [x] 提交本任务文件，提交说明：`功能：实现表单发布版本和目录管理`。
 
 ### Task 8: Ant Design 表单设计器与共用填写组件
 
