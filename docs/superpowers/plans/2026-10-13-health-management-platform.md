@@ -96,13 +96,13 @@
 
 **文件：** 新建 `backend/apps/tenants/{quota,services,serializers,api}.py`、配额迁移；新建 `backend/apps/core/{models,idempotency,audit}.py`、核心迁移；新建 `backend/tests/{test_tenants,test_quota,test_idempotency}.py`。
 
-**接口：** 消费任务 2 的 `Actor` 和事务上下文。提供 `UsageCounts(doctors: int, patients: int, studies: int)`；`mutate_with_quota(actor, resource: 'doctors'|'patients'|'studies', mutation: Callable[[], T]) -> T`；`quota_trigger_sql(table_name: str, resource: str) -> list[str]`；`run_idempotent(actor, key: str, operation: str, payload: dict, mutation: Callable[[], dict]) -> dict`；`audit(actor, action: str, object_type: str, object_id: UUID, changes: dict) -> None`。提供 `/api/platform/tenants/`、租户启停、管理员设置、额度配置与 `/api/platform/usage/`。
+**接口：** 消费任务 2 的 `Actor` 和事务上下文。提供 `UsageCounts(doctors: int, patients: int, studies: int)`；`mutate_with_quota(actor, resource: 'doctors'|'patients'|'studies', mutation: Callable[[], T], *, delta: int = 1) -> T`；`quota_trigger_sql(table_name: str, resource: str) -> list[str]`；`run_idempotent(actor, key: str, operation: str, payload: dict, mutation: Callable[[], dict]) -> dict`；`audit(actor, action: str, object_type: str, object_id: UUID, changes: dict) -> None`。提供 `/api/platform/tenants/`、租户启停、管理员设置、额度配置与 `/api/platform/usage/`。
 
-- [ ] 写 `test_limit_cannot_be_lower_than_usage`：已使用 1 时更新上限 0，断言 409、原额度不变；写 `test_tenant_admin_cannot_call_platform_api` 断言 403；写 `test_reused_key_with_different_payload` 断言 `idempotency_key_reused`。平台创建租户后断言初始管理员与配额在同一事务存在，失败时均不存在。
-- [ ] 运行 `uv run pytest tests/test_tenants.py tests/test_quota.py tests/test_idempotency.py -q`，确认对应接口或服务缺失导致失败。
-- [ ] 实现锁定配额行的通用写入入口。用量字段由任务 4、5、9 消费 `quota_trigger_sql` 安装的数据库触发器随业务行插入、软删除和恢复更新；触发器锁定配额行并检查上限，回滚时计数也回滚。计数函数由所有者安装、固定搜索路径和资源映射，禁止运行角色直接编辑用量。平台统计函数只返回租户和三项计数，撤销普通租户角色的执行权；平台角色不获得医生、患者或研究表读取权。幂等回执检查内容摘要与当前授权，审计不可通过普通 API 编辑。
-- [ ] 运行以上测试并检查平台用量响应不含业务内容；额度零拒绝写入，未实现的资源尚无记录时计数为零，不能用假数据替代统计。
-- [ ] 提交本任务文件，提交说明：`功能：实现租户管理配额和事务工具`。
+- [x] 写 `test_limit_cannot_be_lower_than_usage`：已使用 1 时更新上限 0，断言 409、原额度不变；写 `test_tenant_admin_cannot_call_platform_api` 断言 403；写 `test_reused_key_with_different_payload` 断言 `idempotency_key_reused`。平台创建租户后断言初始管理员与配额在同一事务存在，失败时均不存在。
+- [x] 运行 `uv run pytest tests/test_tenants.py tests/test_quota.py tests/test_idempotency.py -q`，确认对应接口或服务缺失导致失败。
+- [x] 实现锁定配额行的通用写入入口。用量字段由任务 4、5、9 消费 `quota_trigger_sql` 安装的数据库触发器随业务行插入、软删除和恢复更新；触发器锁定配额行并检查上限，回滚时计数也回滚。计数函数由所有者安装、固定搜索路径和资源映射，禁止运行角色直接编辑用量。平台统计函数只返回租户和三项计数，撤销普通租户角色的执行权；平台角色不获得医生、患者或研究表读取权。幂等回执检查内容摘要与当前授权，审计不可通过普通 API 编辑。
+- [x] 运行以上测试并检查平台用量响应不含业务内容；额度零拒绝写入，未实现的资源尚无记录时计数为零，不能用假数据替代统计。
+- [x] 提交本任务文件，提交说明：`功能：实现租户管理配额和事务工具`。
 
 ### Task 4: 管理布局、医生档案与并发配额
 

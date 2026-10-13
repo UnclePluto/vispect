@@ -1,10 +1,11 @@
 import os
 import uuid
+from contextlib import contextmanager
 import psycopg
 from psycopg import sql
 from django.db import connections,transaction
 from rest_framework.test import APIClient
-from apps.tenants.models import Tenant
+from apps.tenants.models import Tenant,TenantQuota
 from apps.accounts.models import Account
 from apps.core.types import Actor
 
@@ -15,6 +16,8 @@ class TestWorld:
         self.app_dsn=os.environ['DATABASE_URL']
         self.control_dsn=os.environ['CONTROL_DATABASE_URL']
         self.tenants={slug:Tenant.objects.using('migration').create(slug=slug,name=f'测试机构 {slug}') for slug in ['a','b']}
+        for tenant in self.tenants.values():
+            self.owner_save(TenantQuota(tenant=tenant))
         self.accounts={}
         for slug in ['a','b']:
             for role,username in [('tenant_admin','admin'),('doctor','doctor')]:
@@ -27,10 +30,14 @@ class TestWorld:
         self.accounts[None,'platform_admin']=account
 
     def owner_save(self,instance):
-        with transaction.atomic(using='migration'):
-            if getattr(instance,'tenant_id',None):
-                with connections['migration'].cursor() as cur:cur.execute("SELECT set_config('vispect.tenant_id',%s,true)",[str(instance.tenant_id)])
+        with self.owner_context(getattr(instance,'tenant_id',None)):
             instance.save(using='migration')
+
+    @contextmanager
+    def owner_context(self,tenant_id):
+        with transaction.atomic(using='migration'):
+            with connections['migration'].cursor() as cur:cur.execute("SELECT set_config('vispect.tenant_id',%s,true)",[str(tenant_id) if tenant_id else ''])
+            yield
 
     def actor(self,tenant,role):
         account=self.accounts[tenant,role]
