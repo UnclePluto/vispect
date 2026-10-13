@@ -41,3 +41,10 @@ def test_tenant_revision_conflict_keeps_existing_limits(world):
     response=client.patch(f'/api/platform/tenants/{tenant.id}/',{'name':'旧编辑','expected_revision':0},format='json',HTTP_X_CSRFTOKEN=token)
     assert response.status_code == 409
     assert response.json()['code'] == 'revision_conflict'
+
+def test_empty_password_preserves_administrator_password(world):
+    client=world.login(None,'platform_admin');tenant=world.tenants['a']
+    token=client.get('/api/auth/csrf/').json()['csrf_token']
+    response=client.patch(f'/api/platform/tenants/{tenant.id}/administrator/',{'username':'admin','name':'更新管理员','enabled':True,'password':'','expected_revision':1},format='json',HTTP_X_CSRFTOKEN=token)
+    assert response.status_code == 200
+    assert world.login('a','tenant_admin').get('/api/auth/me/').json()['name'] == '更新管理员'

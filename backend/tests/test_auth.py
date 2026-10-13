@@ -60,3 +60,31 @@ def test_client_cannot_switch_session_tenant(world):
     client = world.login('a','tenant_admin')
     response = client.get('/api/auth/me/', HTTP_X_TENANT_ID=str(world.tenants['b'].id))
     assert response.json()['tenant_id'] == str(world.tenants['a'].id)
+
+def test_initial_password_cannot_be_reused(world):
+    account=world.accounts['a','tenant_admin'];account.must_change_password=True;world.owner_save(account)
+    client=world.login('a','tenant_admin')
+    response=world.post(client,'/api/auth/change-password/',{'old_password':world.password,'new_password':world.password})
+    assert response.status_code == 400
+    assert response.json()['code'] == 'password_unchanged'
+    assert client.get('/api/auth/me/').json()['must_change_password']
+
+def test_deactivation_during_password_change_cannot_reactivate_account(world):
+    from django.db import connection
+    from apps.accounts.models import Account
+    client=world.login('a','doctor');token=client.get('/api/auth/csrf/').json()['csrf_token']
+    changed=False
+    def deactivate_after_identity_read(execute,statement,params,many,context):
+        nonlocal changed
+        result=execute(statement,params,many,context)
+        if not changed and statement.startswith('SELECT') and 'FROM "accounts_account"' in statement:
+            changed=True
+            account=world.accounts['a','doctor'];account.is_active=False;world.owner_save(account)
+        return result
+    with connection.execute_wrapper(deactivate_after_identity_read):
+        response=client.post('/api/auth/change-password/',{'old_password':world.password,'new_password':'Another-Strong-Password-2026!'},format='json',HTTP_X_CSRFTOKEN=token)
+    assert response.status_code == 401
+    with world.owner_context(world.tenants['a'].id):
+        account=Account.objects.using('migration').get(id=world.accounts['a','doctor'].id)
+        assert not account.is_active
+        assert account.check_password(world.password)

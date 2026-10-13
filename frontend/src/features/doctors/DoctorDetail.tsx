@@ -1,0 +1,3 @@
+import {Descriptions,Drawer,Tag} from 'antd';
+import type {Doctor} from './api';
+export function DoctorDetail({doctor,onClose}:{doctor:Doctor|null;onClose:()=>void}){return <Drawer title="医生资料" open={!!doctor} onClose={onClose} size="large">{doctor&&<Descriptions column={1} bordered items={[{key:'name',label:'姓名',children:doctor.name},{key:'username',label:'用户名',children:doctor.username},{key:'phone',label:'联系方式',children:doctor.phone||'—'},{key:'org',label:'所属单位',children:doctor.organization||'—'},{key:'dept',label:'科室',children:doctor.department||'—'},{key:'title',label:'职称',children:doctor.title||'—'},{key:'enabled',label:'账号状态',children:<Tag color={doctor.enabled?'green':'default'}>{doctor.enabled?'启用':'停用'}</Tag>}]}/>}</Drawer>}

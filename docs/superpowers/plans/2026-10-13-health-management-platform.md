@@ -110,11 +110,11 @@
 
 **接口：** 消费任务 2、3 的事务、RLS、配额和审计接口。提供 `create_doctor(actor, data: dict) -> Doctor`、`update_doctor(actor, doctor_id: UUID, data: dict, expected_revision: int) -> Doctor`、`delete_doctor(actor, doctor_id: UUID, expected_revision: int) -> Doctor`、`restore_doctor(actor, doctor_id: UUID, expected_revision: int) -> Doctor`、`set_doctor_enabled(actor, doctor_id: UUID, enabled: bool, expected_revision: int) -> Doctor`；`/api/doctors/` 及停用/恢复动作。提供通用 `api<T>`、`useActor() -> Actor | null`、权限路由与基础 CRUD 表格交互；`TestWorld.doctor(tenant, **data) -> Doctor`。
 
-- [ ] 写 `test_last_doctor_slot_is_atomic`：已有 2 名医生，上限 3，两个独立连接并发创建，`assert successes == 1; assert usage.doctors == 3`；写直接 SQL 超额插入拒绝、事务失败不占额、停用仍占额、软删除释放、恢复超额、中文姓名保留和医生不能改角色测试。前端写 `test_logout_clears_private_cache`，`expect(queryClient.getQueryCache().getAll()).toHaveLength(0)`。
-- [ ] 运行 `uv run pytest tests/test_doctors.py -q` 与 `pnpm test --run src/features/auth src/features/doctors`，确认功能缺失导致失败。
-- [ ] 实现医生账号和档案的原子创建、额度触发器及修订校验；完善 `TestWorld.doctor()`。构建中文 Ant Design 布局、两种登录、密码修改、租户控制面页面及医生列表/编辑/详情；切换会话身份时清空 Query 缓存。
-- [ ] 运行本任务测试、`pnpm typecheck` 和 `pnpm build`；实际 API 验证医生自编辑仅允许基础资料，账号角色或 tenant 字段不能由表单覆盖。
-- [ ] 提交本任务文件，提交说明：`功能：实现医生管理和标准后台布局`。
+- [x] 写 `test_last_doctor_slot_is_atomic`：已有 2 名医生，上限 3，两个独立连接并发创建，`assert successes == 1; assert usage.doctors == 3`；写直接 SQL 超额插入拒绝、事务失败不占额、停用仍占额、软删除释放、恢复超额、中文姓名保留和医生不能改角色测试。前端写 `test_logout_clears_private_cache`，`expect(queryClient.getQueryCache().getAll()).toHaveLength(0)`。
+- [x] 运行 `uv run pytest tests/test_doctors.py -q` 与 `pnpm test --run src/features/auth src/features/doctors`，确认功能缺失导致失败。
+- [x] 实现医生账号和档案的原子创建、额度触发器及修订校验；完善 `TestWorld.doctor()`。构建中文 Ant Design 布局、两种登录、密码修改、租户控制面页面及医生列表/编辑/详情；切换会话身份时清空 Query 缓存。
+- [x] 运行本任务测试、`pnpm typecheck` 和 `pnpm build`；实际 API 验证医生自编辑仅允许基础资料，账号角色或 tenant 字段不能由表单覆盖。
+- [x] 提交本任务文件，提交说明：`功能：实现医生管理和标准后台布局`。
 
 ### Task 5: 患者档案、负责关系与可见范围
 

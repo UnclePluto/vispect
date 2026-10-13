@@ -1,0 +1,12 @@
+import {api} from '../../api/client';
+import type {Page,Revision} from '../../api/types';
+export type Counts={doctors:number;patients:number;studies:number};
+export type Tenant=Revision&{slug:string;name:string;enabled:boolean;limits:Counts;usage:Counts};
+export type TenantValues={slug:string;name:string;enabled:boolean;limits:Counts;admin_username?:string;admin_password?:string};
+export const getTenants=(page:number,search:string)=>api<Page<Tenant>>(`/api/platform/tenants/?page=${page}&search=${encodeURIComponent(search)}`);
+export const createTenant=(body:TenantValues)=>api<Tenant>('/api/platform/tenants/',{method:'POST',body});
+export const updateTenant=(tenant:Tenant,body:Partial<TenantValues>)=>api<Tenant>(`/api/platform/tenants/${tenant.id}/`,{method:'PATCH',body:{...body,expected_revision:tenant.revision}});
+export type Administrator=Revision&{username:string;name:string;enabled:boolean};
+export const getAdministrator=(tenantId:string)=>api<Administrator>(`/api/platform/tenants/${tenantId}/administrator/`);
+export const updateAdministrator=(tenantId:string,body:Administrator&{password?:string})=>api<Administrator>(`/api/platform/tenants/${tenantId}/administrator/`,{method:'PATCH',body:{...body,expected_revision:body.revision}});
+export const getPlatformUsage=()=>api<Page<Counts&{tenant_id:string;tenant_name:string}>>('/api/platform/usage/');

@@ -16,6 +16,8 @@ def test_zero_quota_forbids_creation(world):
     from apps.tenants.models import TenantQuota
     from apps.tenants.quota import mutate_with_quota
     from apps.accounts.models import Account
+    from apps.doctors.services import delete_doctor
+    delete_doctor(world.actor('a','tenant_admin'),world.accounts['a','doctor'].doctor_id,1)
     quota=TenantQuota.objects.using('migration').get(tenant=world.tenants['a'])
     quota.doctors_limit=0;world.owner_save(quota)
     with pytest.raises(ApiError) as exc:

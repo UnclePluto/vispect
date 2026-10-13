@@ -21,9 +21,13 @@ class TestWorld:
         self.accounts={}
         for slug in ['a','b']:
             for role,username in [('tenant_admin','admin'),('doctor','doctor')]:
-                account=Account(tenant=self.tenants[slug],username=username,name=f'测试{username}',role=role,doctor_id=uuid.uuid4() if role=='doctor' else None)
+                account=Account(tenant=self.tenants[slug],username=username,name=f'测试{username}',role=role)
                 account.set_password(self.password)
                 self.owner_save(account)
+                if role=='doctor':
+                    from apps.doctors.models import Doctor
+                    doctor=Doctor(tenant=self.tenants[slug],account=account,name=account.name)
+                    self.owner_save(doctor);account.doctor_id=doctor.id;self.owner_save(account)
                 self.accounts[slug,role]=account
         account=Account(username='platform',name='平台管理员',role='platform_admin')
         account.set_password(self.password);self.owner_save(account)
@@ -64,3 +68,9 @@ class TestWorld:
 
     def account_ids(self,tenant):
         return sorted(a.id for (slug,_),a in self.accounts.items() if slug==tenant)
+
+    def doctor(self,tenant,**data):
+        from apps.doctors.services import create_doctor
+        doctor=create_doctor(self.actor(tenant,'tenant_admin'),{'username':f'doctor-{uuid.uuid4().hex[:8]}','name':'新增测试医生','password':self.password,**data})
+        doctor.account.must_change_password=False;self.owner_save(doctor.account)
+        return doctor

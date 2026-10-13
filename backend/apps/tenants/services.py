@@ -30,7 +30,7 @@ def create_tenant(actor,data):
 def update_tenant(actor,tenant_id,data,expected_revision):
     require_role(actor,'platform_admin')
     with transaction.atomic(using='control'):
-        tenant=get_object(Tenant.objects.using('control'),tenant_id,True)
+        tenant=get_object(Tenant.objects.using('control'),tenant_id,True,no_key=True)
         ensure_revision(tenant,expected_revision)
         quota=TenantQuota.objects.using('control').select_for_update().get(tenant=tenant)
         if 'limits' in data:
@@ -50,7 +50,7 @@ def update_tenant(actor,tenant_id,data,expected_revision):
 def configure_administrator(actor,tenant_id,data):
     require_role(actor,'platform_admin')
     with transaction.atomic(using='control'):
-        tenant=get_object(Tenant.objects.using('control'),tenant_id,True)
+        tenant=get_object(Tenant.objects.using('control'),tenant_id,True,no_key=True)
         account=Account.objects.using('control').select_for_update().filter(tenant=tenant,role='tenant_admin').order_by('created_at').first()
         if not account:raise ApiError('object_unavailable','管理员账号不可用',status=404)
         ensure_revision(account,data['expected_revision'])

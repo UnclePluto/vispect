@@ -18,7 +18,7 @@ class TenantWriteSerializer(serializers.Serializer):
 class AdministratorSerializer(serializers.Serializer):
     username=serializers.CharField(max_length=150)
     name=serializers.CharField(max_length=200)
-    password=serializers.CharField(trim_whitespace=False,required=False,write_only=True)
+    password=serializers.CharField(trim_whitespace=False,required=False,write_only=True,allow_blank=True)
     enabled=serializers.BooleanField(required=False)
     expected_revision=serializers.IntegerField(min_value=1)
 
