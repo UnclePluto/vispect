@@ -30,3 +30,7 @@ from apps.core.dashboard import DashboardView
 from apps.followups.api import StudyAnswersView
 from apps.forms.api import FormReferencesView
 urlpatterns += [path('api/calendar/',CalendarView.as_view()),path('api/dashboard/',DashboardView.as_view()),path('api/studies/<uuid:study_id>/answers/',StudyAnswersView.as_view()),path('api/forms/<uuid:form_id>/references/',FormReferencesView.as_view())]
+
+from apps.core.audit_api import AuditView
+from apps.core.recycle_api import RecycleView
+urlpatterns += [path('api/audit/',AuditView.as_view()),path('api/platform/audit/',AuditView.as_view(platform=True)),path('api/recycle/',RecycleView.as_view())]

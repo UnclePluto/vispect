@@ -230,11 +230,11 @@
 
 **接口：** `/api/audit/` 和 `/api/recycle/` 仅租户管理员访问；平台审计走控制面入口；各资源 `/restore/`。`uv run python manage.py seed_demo` 接收环境变量中的演示密码，不写真实资料，重复执行不重复生成记录。
 
-- [ ] 写 `test_restore_preserves_stopped_state_and_checks_quota`：`assert enrollment.status == 'stopped'; assert study.status == 'ended'; assert over_quota_response.status_code == 409`；审计不可被医生或其他租户查询。`test_seed_demo_is_repeatable` 连续运行两次，`assert counts_after_first == counts_after_second`，覆盖两租户、管理员、不同负责范围医生、发布表单和研究。
-- [ ] 运行 `uv run pytest tests/test_recycle.py tests/test_audit.py tests/test_seed_demo.py -q`，确认相关入口与初始化缺失导致失败。
-- [ ] 提供删除记录与受限恢复操作，复用原模块服务，不另写免配额的恢复路径。实现审计列表，只含有授权的租户事件。通过真实业务服务生成虚构演示流程；至少包含无筛选及有筛选两种研究，包含表单显示/跳题和两名医生数据范围演示。
-- [ ] 运行以上测试与前端构建；对照设计逐项检查所有创建、修改、分配、发布、入组、答案修订、完成、停止、删除恢复和导出均留痕。
-- [ ] 提交本任务文件，提交说明：`功能：实现回收审计和演示数据初始化`。
+- [x] 写 `test_restore_preserves_stopped_state_and_checks_quota`：`assert enrollment.status == 'stopped'; assert study.status == 'ended'; assert over_quota_response.status_code == 409`；审计不可被医生或其他租户查询。`test_seed_demo_is_repeatable` 连续运行两次，`assert counts_after_first == counts_after_second`，覆盖两租户、管理员、不同负责范围医生、发布表单和研究。
+- [x] 运行 `uv run pytest tests/test_recycle.py tests/test_audit.py tests/test_seed_demo.py -q`，确认相关入口与初始化缺失导致失败。
+- [x] 提供删除记录与受限恢复操作，复用原模块服务，不另写免配额的恢复路径。实现审计列表，只含有授权的租户事件。通过真实业务服务生成虚构演示流程；至少包含无筛选及有筛选两种研究，包含表单显示/跳题和两名医生数据范围演示。
+- [x] 运行以上测试与前端构建；对照设计逐项检查所有创建、修改、分配、发布、入组、答案修订、完成、停止、删除恢复和导出均留痕。
+- [x] 提交本任务文件，提交说明：`功能：实现回收审计和演示数据初始化`。
 
 ### Task 15: 浏览器闭环验收、部署材料与最终评审
 
