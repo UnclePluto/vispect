@@ -74,11 +74,11 @@
 
 **接口：** 提供 `GET /api/health/ -> {status: 'ok', database: 'postgresql'}`；`provision_test_database(owner_dsn, app_dsn, control_dsn) -> None`；提供上述 `ApiError`。创建 `vispect_owner`、`vispect_app`、`vispect_control` 三种连接角色，后两者无超级用户、所有者、绕过 RLS 或建库权限。任务 1 不启用默认 Django 用户表，任务 2 在首个认证迁移前确定自定义用户模型。
 
-- [ ] 写 `test_health_reports_postgresql`：`assert response.status_code == 200; assert response.json() == {'status': 'ok', 'database': 'postgresql'}`；数据库断开时断言 503，不返回连接串。
-- [ ] 安装本任务依赖并启动 PostgreSQL，运行 `uv run pytest tests/test_health.py -q`，确认因为健康路由缺失而失败，不能把环境安装失败当作测试红灯。
-- [ ] 实现健康接口、数据库角色、测试库建立与设置；前端只搭建可运行应用入口。`DATABASE_URL`、`CONTROL_DATABASE_URL` 使用受限账号；`MIGRATION_DATABASE_URL` 只用于管理命令和测试库准备，Web 进程不读取或注册所有者连接。配置 `pnpm test/typecheck/build` 与 pytest 的真实数据库测试入口。
-- [ ] 运行 `uv run pytest tests/test_health.py -q` 与 `pnpm build`，均通过；检查 `current_user`、`rolsuper`、`rolbypassrls` 与表所有者，确认运行身份符合约束。
-- [ ] 提交本任务明确列出的运行环境文件，提交说明：`基础：建立前后端运行环境和数据库角色`。
+- [x] 写 `test_health_reports_postgresql`：`assert response.status_code == 200; assert response.json() == {'status': 'ok', 'database': 'postgresql'}`；数据库断开时断言 503，不返回连接串。
+- [x] 安装本任务依赖并启动 PostgreSQL，运行 `uv run pytest tests/test_health.py -q`，确认因为健康路由缺失而失败，不能把环境安装失败当作测试红灯。
+- [x] 实现健康接口、数据库角色、测试库建立与设置；前端只搭建可运行应用入口。`DATABASE_URL`、`CONTROL_DATABASE_URL` 使用受限账号；`MIGRATION_DATABASE_URL` 只用于管理命令和测试库准备，Web 进程不读取或注册所有者连接。配置 `pnpm test/typecheck/build` 与 pytest 的真实数据库测试入口。
+- [x] 运行 `uv run pytest tests/test_health.py -q` 与 `pnpm build`，均通过；检查 `current_user`、`rolsuper`、`rolbypassrls` 与表所有者，确认运行身份符合约束。
+- [x] 提交本任务明确列出的运行环境文件，提交说明：`基础：建立前后端运行环境和数据库角色`。
 
 ### Task 2: 租户上下文、账号与会话隔离
 
@@ -86,11 +86,11 @@
 
 **接口：** 提供 `Actor`；`tenant_transaction(tenant_id: UUID) -> ContextManager[None]`；`current_actor(request) -> Actor`；`apply_tenant_rls(table_name: str) -> list[str]`。测试 `TestWorld` 提供 `actor(tenant, role) -> Actor`、`login(tenant, role, enforce_csrf=True) -> APIClient`、`runtime_rows(tenant, table) -> list[UUID]`、`account_ids(tenant) -> list[UUID]`，查询结果按 UUID 排序。API：`/api/auth/{csrf,tenant-login,platform-login,me,logout,change-password}/`。自定义 `Account` 使用 `AUTH_USER_MODEL`，租户账号内用户名唯一，平台账号单独唯一。
 
-- [ ] 写 `test_cross_tenant_account_rows_are_invisible`：`assert world.runtime_rows(tenant='a', table='accounts_account') == world.account_ids('a')`；写 `test_missing_context_denies_rows` 断言无上下文无租户记录；参数化验证读、写、连接复用和回滚。认证测试断言无 CSRF 的登录失败、同名用户名分别登录、旧会话停用后失效、平台角色不能调用租户业务入口。
-- [ ] 运行 `uv run pytest tests/test_auth.py tests/test_rls.py -q`，确认 RLS/认证未实现时失败。
-- [ ] 实现独立控制面连接与租户事务中间件，在认证查询前设置合法上下文；通过服务端会话确定业务租户，不信任客户端租户字段。创建 `apply_tenant_rls(table_name: str) -> list[str]` 迁移辅助并将其应用于账号和以后各业务表，设置 FORCE RLS、同租户约束及角色授权。登录、密码修改和所有写接口检查 CSRF。
-- [ ] 用实际受限账号运行以上测试，确认非表所有者；检查平台连接仅能读取允许的控制面数据；首次登录必须先改密码才能调用业务写接口。
-- [ ] 提交认证、上下文与迁移文件，提交说明：`功能：实现租户隔离和账号会话权限`。
+- [x] 写 `test_cross_tenant_account_rows_are_invisible`：`assert world.runtime_rows(tenant='a', table='accounts_account') == world.account_ids('a')`；写 `test_missing_context_denies_rows` 断言无上下文无租户记录；参数化验证读、写、连接复用和回滚。认证测试断言无 CSRF 的登录失败、同名用户名分别登录、旧会话停用后失效、平台角色不能调用租户业务入口。
+- [x] 运行 `uv run pytest tests/test_auth.py tests/test_rls.py -q`，确认 RLS/认证未实现时失败。
+- [x] 实现独立控制面连接与租户事务中间件，在认证查询前设置合法上下文；通过服务端会话确定业务租户，不信任客户端租户字段。创建 `apply_tenant_rls(table_name: str) -> list[str]` 迁移辅助并将其应用于账号和以后各业务表，设置 FORCE RLS、同租户约束及角色授权。登录、密码修改和所有写接口检查 CSRF。
+- [x] 用实际受限账号运行以上测试，确认非表所有者；检查平台连接仅能读取允许的控制面数据；首次登录必须先改密码才能调用业务写接口。
+- [x] 提交认证、上下文与迁移文件，提交说明：`功能：实现租户隔离和账号会话权限`。
 
 ### Task 3: 租户控制面、配额与通用事务工具
 
