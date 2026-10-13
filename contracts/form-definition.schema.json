@@ -1,0 +1,189 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": 1
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "questions": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "type": {
+            "enum": [
+              "text",
+              "textarea",
+              "number",
+              "date",
+              "radio",
+              "checkbox",
+              "select",
+              "slider"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "min_length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "max_length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "min": {
+            "type": "number",
+            "minimum": -1000000000000.0,
+            "maximum": 1000000000000.0
+          },
+          "max": {
+            "type": "number",
+            "minimum": -1000000000000.0,
+            "maximum": 1000000000000.0
+          },
+          "precision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "step": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1000000000000.0
+          },
+          "min_selections": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "max_selections": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "options": {
+            "type": "array",
+            "maxItems": 200,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                }
+              },
+              "required": [
+                "id",
+                "label"
+              ]
+            }
+          },
+          "condition": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "enum": [
+                  "all",
+                  "any"
+                ]
+              },
+              "rules": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 50,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "question_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "operator": {
+                      "enum": [
+                        "eq",
+                        "neq",
+                        "contains",
+                        "gt",
+                        "gte",
+                        "lt",
+                        "lte",
+                        "answered"
+                      ]
+                    },
+                    "value": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "question_id",
+                    "operator"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "mode",
+              "rules"
+            ]
+          },
+          "jumps": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title"
+        ]
+      }
+    }
+  },
+  "required": [
+    "protocol_version",
+    "title",
+    "questions"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

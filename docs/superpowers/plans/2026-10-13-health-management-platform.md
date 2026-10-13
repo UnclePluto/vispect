@@ -134,11 +134,11 @@
 
 **接口：** 消费通用 JSON 协议。Python 提供 `validate_definition(definition: dict, publish: bool = False) -> dict[str, list[str]]`、`evaluate_answers(definition: dict, answers: dict, mode: Literal['draft','submit']) -> EvaluationResult`；TypeScript 提供对应 `validateDefinition(definition: FormDefinition, publish?: boolean): Record<string, string[]>`、`evaluateAnswers(definition: FormDefinition, answers: Record<string, JSONValue>, mode: 'draft'|'submit'): EvaluationResult`，camelCase 只用于函数名，JSON 属性保持相同 snake_case。题型值固定为 `text/textarea/number/date/radio/checkbox/select/slider`，协议版本固定为 1。
 
-- [ ] 写 `test_shared_form_cases` 和两端参数化测试：每个 case 断言 `assert result.visible_ids == case['expected']['visible_ids']; assert result.answers == case['expected']['answers']; assert result.errors == case['expected']['errors']`，TypeScript 使用同样预期。样例包括隐藏必填、向后跳题、目标隐藏、零值、非法选项、未知题目、回跳、重复 ID、非法数字、精度越界，以及 `2024-02-29` 有效、`2026-02-29` 无效；无穷数字不能写进 JSON，在两端测试中另外构造并断言拒绝。
-- [ ] 运行 `uv run pytest tests/test_form_engine.py -q` 与 `pnpm test --run src/form-engine/engine.test.ts`，确认解释器缺失导致失败。
-- [ ] 实现定义校验及从前到后的解释器，只以已经激活并校验的前置答案参与条件。隐藏与跳过值移除；无答案时除 `answered` 判定外条件不成立；禁止任意脚本。草稿不强制未填项，提交检查可见必填项，数字必须有限，日期严格按实际日历校验。
-- [ ] 两端运行同一份 case 文件全部通过；新增规则先新增共用 case，不能各自维护两份预期。检查预览与正式填写将消费同一解释器。
-- [ ] 提交协议及两端解释器，提交说明：`功能：建立跨语言动态表单协议和规则引擎`。
+- [x] 写 `test_shared_form_cases` 和两端参数化测试：每个 case 断言 `assert result.visible_ids == case['expected']['visible_ids']; assert result.answers == case['expected']['answers']; assert result.errors == case['expected']['errors']`，TypeScript 使用同样预期。样例包括隐藏必填、向后跳题、目标隐藏、零值、非法选项、未知题目、回跳、重复 ID、非法数字、精度越界，以及 `2024-02-29` 有效、`2026-02-29` 无效；无穷数字不能写进 JSON，在两端测试中另外构造并断言拒绝。
+- [x] 运行 `uv run pytest tests/test_form_engine.py -q` 与 `pnpm test --run src/form-engine/engine.test.ts`，确认解释器缺失导致失败。
+- [x] 实现定义校验及从前到后的解释器，只以已经激活并校验的前置答案参与条件。隐藏与跳过值移除；无答案时除 `answered` 判定外条件不成立；禁止任意脚本。草稿不强制未填项，提交检查可见必填项，数字必须有限，日期严格按实际日历校验。
+- [x] 两端运行同一份 case 文件全部通过；新增规则先新增共用 case，不能各自维护两份预期。检查预览与正式填写将消费同一解释器。
+- [x] 提交协议及两端解释器，提交说明：`功能：建立跨语言动态表单协议和规则引擎`。
 
 ### Task 7: 表单目录、不可变发布版本与暂停
 

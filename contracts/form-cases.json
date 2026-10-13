@@ -1,0 +1,1105 @@
+[
+  {
+    "name": "隐藏必填及清除旧答案",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "radio",
+          "title": "a",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "b",
+          "required": true,
+          "condition": {
+            "mode": "all",
+            "rules": [
+              {
+                "question_id": "a",
+                "operator": "eq",
+                "value": "yes"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "answers": {
+      "a": "no",
+      "b": "旧值"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {
+        "a": "no"
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "前向跳题",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "radio",
+          "title": "a",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ],
+          "jumps": {
+            "yes": "c"
+          }
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "b",
+          "required": true
+        },
+        {
+          "id": "c",
+          "type": "text",
+          "title": "c"
+        }
+      ]
+    },
+    "answers": {
+      "a": "yes",
+      "b": "清除",
+      "c": "末题"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a",
+        "c"
+      ],
+      "answers": {
+        "a": "yes",
+        "c": "末题"
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "跳题目标隐藏",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "select",
+          "title": "a",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ],
+          "jumps": {
+            "no": "c"
+          }
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "b"
+        },
+        {
+          "id": "c",
+          "type": "text",
+          "title": "c",
+          "condition": {
+            "mode": "all",
+            "rules": [
+              {
+                "question_id": "a",
+                "operator": "eq",
+                "value": "yes"
+              }
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "type": "text",
+          "title": "d"
+        }
+      ]
+    },
+    "answers": {
+      "a": "no",
+      "c": "旧"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a",
+        "d"
+      ],
+      "answers": {
+        "a": "no"
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "零值有效",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "a",
+          "required": true,
+          "min": 0,
+          "max": 10,
+          "precision": 2
+        }
+      ]
+    },
+    "answers": {
+      "a": 0
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {
+        "a": 0
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "非法选项",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "radio",
+          "title": "a",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ]
+        }
+      ]
+    },
+    "answers": {
+      "a": "invalid"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_option"
+        ]
+      }
+    }
+  },
+  {
+    "name": "未知题目",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {
+      "fake": "x"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "fake": [
+          "unknown_question"
+        ]
+      }
+    }
+  },
+  {
+    "name": "数字字符串",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {
+      "a": "12"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_type"
+        ]
+      }
+    }
+  },
+  {
+    "name": "布尔不是数字",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {
+      "a": true
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_type"
+        ]
+      }
+    }
+  },
+  {
+    "name": "小数位越界",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "a",
+          "precision": 2
+        }
+      ]
+    },
+    "answers": {
+      "a": 1.234
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "precision"
+        ]
+      }
+    }
+  },
+  {
+    "name": "数字越界",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "a",
+          "min": 1,
+          "max": 10
+        }
+      ]
+    },
+    "answers": {
+      "a": 0
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "out_of_range"
+        ]
+      }
+    }
+  },
+  {
+    "name": "滑条步长",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "slider",
+          "title": "a",
+          "min": 0,
+          "max": 10,
+          "step": 0.1
+        }
+      ]
+    },
+    "answers": {
+      "a": 0.3
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {
+        "a": 0.3
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "滑条非法步长",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "slider",
+          "title": "a",
+          "min": 0,
+          "max": 10,
+          "step": 0.2
+        }
+      ]
+    },
+    "answers": {
+      "a": 0.3
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "step"
+        ]
+      }
+    }
+  },
+  {
+    "name": "日期2024-02-29",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "date",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {
+      "a": "2024-02-29"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {
+        "a": "2024-02-29"
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "日期2026-02-29",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "date",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {
+      "a": "2026-02-29"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_date"
+        ]
+      }
+    }
+  },
+  {
+    "name": "日期0000-01-01",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "date",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {
+      "a": "0000-01-01"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_date"
+        ]
+      }
+    }
+  },
+  {
+    "name": "日期2026-1-01",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "date",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {
+      "a": "2026-1-01"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_date"
+        ]
+      }
+    }
+  },
+  {
+    "name": "无答案不等于也不成立",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a"
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "b",
+          "condition": {
+            "mode": "all",
+            "rules": [
+              {
+                "question_id": "a",
+                "operator": "neq",
+                "value": "x"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {}
+    }
+  },
+  {
+    "name": "错误前置答案不参与条件",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "a"
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "b",
+          "condition": {
+            "mode": "all",
+            "rules": [
+              {
+                "question_id": "a",
+                "operator": "answered"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "answers": {
+      "a": "1"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_type"
+        ]
+      }
+    }
+  },
+  {
+    "name": "提交必填",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a",
+          "required": true
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "required"
+        ]
+      }
+    }
+  },
+  {
+    "name": "草稿不强制必填",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a",
+          "required": true
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "draft",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {}
+    }
+  },
+  {
+    "name": "多选包含",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "checkbox",
+          "title": "a",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "b",
+          "condition": {
+            "mode": "any",
+            "rules": [
+              {
+                "question_id": "a",
+                "operator": "contains",
+                "value": "yes"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "answers": {
+      "a": [
+        "yes"
+      ],
+      "b": "文本"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a",
+        "b"
+      ],
+      "answers": {
+        "a": [
+          "yes"
+        ],
+        "b": "文本"
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "重复多选",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "checkbox",
+          "title": "a",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ]
+        }
+      ]
+    },
+    "answers": {
+      "a": [
+        "yes",
+        "yes"
+      ]
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_option"
+        ]
+      }
+    }
+  },
+  {
+    "name": "多选数量",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "checkbox",
+          "title": "a",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ],
+          "min_selections": 2
+        }
+      ]
+    },
+    "answers": {
+      "a": [
+        "yes"
+      ]
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "selection_count"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Unicode字符长度",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a",
+          "max_length": 1
+        }
+      ]
+    },
+    "answers": {
+      "a": "😀"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {
+        "a": "😀"
+      },
+      "errors": {}
+    }
+  },
+  {
+    "name": "文本超长",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a",
+          "max_length": 1
+        }
+      ]
+    },
+    "answers": {
+      "a": "中文"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "length"
+        ]
+      }
+    }
+  },
+  {
+    "name": "回跳",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a"
+        },
+        {
+          "id": "b",
+          "type": "radio",
+          "title": "b",
+          "options": [
+            {
+              "id": "yes",
+              "label": "是"
+            },
+            {
+              "id": "no",
+              "label": "否"
+            }
+          ],
+          "jumps": {
+            "yes": "a"
+          }
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
+  },
+  {
+    "name": "重复ID",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a"
+        },
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a"
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
+  },
+  {
+    "name": "后置条件",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "a",
+          "condition": {
+            "mode": "all",
+            "rules": [
+              {
+                "question_id": "b",
+                "operator": "answered"
+              }
+            ]
+          }
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "b"
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
+  },
+  {
+    "name": "无效选项",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "radio",
+          "title": "a",
+          "options": []
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
+  },
+  {
+    "name": "非法范围",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试表单",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "a",
+          "min": 5,
+          "max": 1
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
+  },
+  {
+    "name": "未知特殊键",
+    "definition": {
+      "protocol_version": 1,
+      "title": "测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "题目"
+        }
+      ]
+    },
+    "answers": {
+      "__proto__": "bad"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "__proto__": [
+          "unknown_question"
+        ]
+      }
+    }
+  }
+]
