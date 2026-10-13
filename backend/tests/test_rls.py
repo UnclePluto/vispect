@@ -44,3 +44,10 @@ def test_account_table_forces_rls_and_is_not_owned_by_runtime(world):
 def test_control_connection_cannot_read_tenant_doctor_accounts(world):
     with psycopg.connect(world.control_dsn) as conn:
         assert conn.execute("SELECT id FROM accounts_account WHERE role='doctor'").fetchall() == []
+
+def test_runtime_can_check_migration_status_without_writing(world):
+    import psycopg
+    with psycopg.connect(world.app_dsn) as conn:
+        assert conn.execute('SELECT count(*) FROM django_migrations').fetchone()[0]>0
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute("INSERT INTO django_migrations(app,name,applied) VALUES ('invalid','invalid',now())")

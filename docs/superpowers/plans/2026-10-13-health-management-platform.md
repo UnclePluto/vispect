@@ -158,11 +158,11 @@
 
 **接口：** 消费任务 6 的 `validateDefinition/evaluateAnswers` 与任务 7 API。提供 `DynamicForm(props: {definition: FormDefinition, initialAnswers: Record<string, JSONValue>, mode: 'preview'|'entry', readOnly: boolean, onSaveDraft?: (answers: Record<string, JSONValue>) => Promise<void>, onSubmit?: (answers: Record<string, JSONValue>) => Promise<void>}): ReactNode`；`cloneField(definition: FormDefinition, fieldId: string): FormDefinition` 和 `moveField(definition: FormDefinition, fieldId: string, position: number): FormDefinition`。
 
-- [ ] 写 `test_designer_preview_uses_same_rules_as_entry`：`expect(previewVisibleIds).toEqual(entryVisibleIds)`；测试八种题型、批量选项、题目移动/复制 ID、必填、属性编辑，以及保存被 409 拒绝后保留未保存编辑内容。预览点击提交后 `expect(answerRequests).toHaveLength(0)`。
-- [ ] 运行 `pnpm test --run src/features/forms/FormDesigner.test.tsx src/form-engine`，确认设计器和渲染器缺失导致失败。
-- [ ] 实现左侧题型、中间题目、右侧属性的 Ant Design 布局；排序和复制修改 JSON，不依赖题目文案关联。属性变化走定义校验，提交与预览使用任务 6 引擎。接入任务 7 的草稿、发布、版本与暂停 API，不复制渲染逻辑。
-- [ ] 运行相关测试、类型检查和构建；在浏览器实际检查属性面板、弹窗和长题目在正常桌面窗口中可使用。
-- [ ] 提交本任务文件，提交说明：`功能：实现动态表单设计器和填写组件`。
+- [x] 写 `test_designer_preview_uses_same_rules_as_entry`：`expect(previewVisibleIds).toEqual(entryVisibleIds)`；测试八种题型、批量选项、题目移动/复制 ID、必填、属性编辑，以及保存被 409 拒绝后保留未保存编辑内容。预览点击提交后 `expect(answerRequests).toHaveLength(0)`。
+- [x] 运行 `pnpm test --run src/features/forms/FormDesigner.test.tsx src/form-engine`，确认设计器和渲染器缺失导致失败。
+- [x] 实现左侧题型、中间题目、右侧属性的 Ant Design 布局；排序和复制修改 JSON，不依赖题目文案关联。属性变化走定义校验，提交与预览使用任务 6 引擎。接入任务 7 的草稿、发布、版本与暂停 API，不复制渲染逻辑。
+- [x] 运行相关测试、类型检查和构建；在浏览器实际检查属性面板、弹窗和长题目在正常桌面窗口中可使用。
+- [x] 提交本任务文件，提交说明：`功能：实现动态表单设计器和填写组件`。
 
 ### Task 9: 研究项目、成员与访视定义
 
