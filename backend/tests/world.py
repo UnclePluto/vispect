@@ -78,3 +78,9 @@ class TestWorld:
     def patient(self,tenant,**data):
         from apps.patients.services import create_patient
         return create_patient(self.actor(tenant,'tenant_admin'),{'code':uuid.uuid4().hex[:10],'name':'测试患者','doctor_ids':[self.accounts[tenant,'doctor'].doctor_id],**data})
+
+    def form_version(self,tenant,definition=None):
+        from apps.forms.services import create_form,publish_form
+        actor=self.actor(tenant,'tenant_admin')
+        form=create_form(actor,definition or {'protocol_version':1,'title':'测试表单','questions':[{'id':'q1','type':'text','title':'测试题目','required':True}]})
+        return publish_form(actor,form.id,form.revision,uuid.uuid4().hex)

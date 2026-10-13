@@ -63,6 +63,9 @@ def delete_doctor(actor,doctor_id,expected_revision):
         from apps.patients.models import PatientDoctor
         if PatientDoctor.objects.filter(doctor=doctor,patient__deleted_at__isnull=True).exists():
             raise ApiError('doctor_has_patients','请先转交该医生负责的患者')
+        from apps.studies.models import Study
+        if Study.objects.filter(owner=doctor,deleted_at__isnull=True,state__in=['active','paused']).exists():
+            raise ApiError('doctor_has_studies','请先转交进行中或暂停的负责研究')
         doctor.deleted_at=timezone.now();doctor.revision+=1;doctor.save()
         account=doctor.account;account.is_active=False;account.revision+=1;account.save()
         audit(actor,'delete','doctor',doctor.id,{'name':doctor.name})

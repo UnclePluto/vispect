@@ -48,3 +48,10 @@ class FormStateView(APIView):
         actor=current_actor(request)
         form=restore_form(actor,form_id,edit_revision(request)) if self.action=='restore' else set_form_paused(actor,form_id,self.action=='pause',edit_revision(request))
         return Response(form_payload(form,actor))
+
+class PublishedVersionOptionsView(APIView):
+    def get(self,request):
+        from apps.core.permissions import require_tenant
+        actor=current_actor(request);require_tenant(actor)
+        query=FormVersion.objects.filter(tenant_id=actor.tenant_id,form__deleted_at__isnull=True).select_related('form').order_by('form_id','-number')
+        return Response(paginate(query,request,lambda v:{'id':str(v.id),'form_id':str(v.form_id),'title':v.definition['title'],'number':v.number,'paused':v.form.paused}))

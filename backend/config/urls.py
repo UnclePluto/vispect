@@ -10,5 +10,8 @@ urlpatterns += [path('api/doctors/',DoctorsView.as_view()),path('api/doctors/opt
 from apps.patients.api import PatientsView,PatientDetailView,PatientAssignView,PatientRestoreView
 urlpatterns += [path('api/patients/',PatientsView.as_view()),path('api/patients/<uuid:patient_id>/',PatientDetailView.as_view()),path('api/patients/<uuid:patient_id>/assign-doctors/',PatientAssignView.as_view()),path('api/patients/<uuid:patient_id>/restore/',PatientRestoreView.as_view())]
 
-from apps.forms.api import FormsView,FormDetailView,FormVersionsView,FormPublishView,FormStateView
-urlpatterns += [path('api/forms/',FormsView.as_view()),path('api/forms/<uuid:form_id>/',FormDetailView.as_view()),path('api/forms/<uuid:form_id>/versions/',FormVersionsView.as_view()),path('api/forms/<uuid:form_id>/publish/',FormPublishView.as_view())] + [path('api/forms/<uuid:form_id>/'+action+'/',FormStateView.as_view(action=action)) for action in ['pause','resume','restore']]
+from apps.forms.api import FormsView,FormDetailView,FormVersionsView,FormPublishView,FormStateView,PublishedVersionOptionsView
+urlpatterns += [path('api/forms/',FormsView.as_view()),path('api/forms/version-options/',PublishedVersionOptionsView.as_view()),path('api/forms/<uuid:form_id>/',FormDetailView.as_view()),path('api/forms/<uuid:form_id>/versions/',FormVersionsView.as_view()),path('api/forms/<uuid:form_id>/publish/',FormPublishView.as_view())] + [path('api/forms/<uuid:form_id>/'+action+'/',FormStateView.as_view(action=action)) for action in ['pause','resume','restore']]
+
+from apps.studies.api import StudiesView,StudyDetailView,StudyMembersView,StudyProtocolView,StudyStateView
+urlpatterns += [path('api/studies/',StudiesView.as_view()),path('api/studies/<uuid:study_id>/',StudyDetailView.as_view()),path('api/studies/<uuid:study_id>/members/',StudyMembersView.as_view()),path('api/studies/<uuid:study_id>/protocol/',StudyProtocolView.as_view())] + [path('api/studies/<uuid:study_id>/'+action+'/',StudyStateView.as_view(state=state)) for action,state in [('start','active'),('resume','active'),('pause','paused'),('end','ended'),('restore','restore')]]

@@ -1,0 +1,15 @@
+import {api} from '../../api/client';
+import type {Revision,Page} from '../../api/types';
+export type Binding={id?:string;form_version_id:string;form_title?:string;version_number?:number;respondent:'doctor'|'patient';required:boolean};
+export type Stage={id?:string;position?:number;name:string;kind:'screening'|'baseline'|'followup'|'end';offset_days:number;window_before:number;window_after:number;bindings:Binding[]};
+export type Study=Revision&{name:string;code:string;organization:string;description:string;owner_id:string;owner_name:string;planned_start:string|null;planned_end:string|null;state:'draft'|'active'|'paused'|'ended';protocol_frozen:boolean;editable:boolean;members?:{id:string;name:string}[];stages?:Stage[];deleted_at:string|null};
+export type StudyValues={name:string;code:string;organization?:string;description?:string;owner_id?:string;planned_start?:string|null;planned_end?:string|null};
+export const stateLabels={draft:'草稿',active:'进行中',paused:'暂停',ended:'已结束'};
+export const getStudies=(page=1,search='',state='')=>api<Page<Study>>(`/api/studies/?${new URLSearchParams({page:String(page),search,state})}`);
+export const getStudy=(id:string)=>api<Study>(`/api/studies/${id}/`);
+export const createStudy=(body:StudyValues)=>api<Study>('/api/studies/',{method:'POST',body});
+export const updateStudy=(s:Study,body:StudyValues)=>api<Study>(`/api/studies/${s.id}/`,{method:'PATCH',body:{...body,expected_revision:s.revision}});
+export const changeStudyState=(s:Study,action:string)=>api<Study>(`/api/studies/${s.id}/${action}/`,{method:'POST',body:{expected_revision:s.revision}});
+export const deleteStudy=(s:Study)=>api<Study>(`/api/studies/${s.id}/`,{method:'DELETE',body:{expected_revision:s.revision}});
+export const setStudyMembers=(s:Study,doctor_ids:string[])=>api<Study>(`/api/studies/${s.id}/members/`,{method:'POST',body:{doctor_ids,expected_revision:s.revision}});
+export const saveProtocol=(s:Study,stages:Stage[])=>api<Study>(`/api/studies/${s.id}/protocol/`,{method:'POST',body:{stages:stages.map(stage=>({name:stage.name,kind:stage.kind,offset_days:stage.offset_days,window_before:stage.window_before,window_after:stage.window_after,bindings:stage.bindings.map(b=>({form_version_id:b.form_version_id,respondent:b.respondent,required:b.required}))})),expected_revision:s.revision}});

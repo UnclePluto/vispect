@@ -48,6 +48,9 @@ def delete_form(actor,form_id,expected_revision):
     require_tenant(actor)
     with tenant_transaction(actor.tenant_id):
         form=get_object(editable_forms(actor),form_id,True);ensure_revision(form,expected_revision)
+        from apps.studies.models import FormBinding
+        if FormBinding.objects.filter(form_version__form=form,stage__study__deleted_at__isnull=True,stage__study__state__in=['active','paused']).exists():
+            raise ApiError('form_in_use','该表单被进行中或暂停研究引用')
         form.deleted_at=timezone.now();form.revision+=1;form.save();audit(actor,'delete','form',form.id,{});return form
 
 def restore_form(actor,form_id,expected_revision):

@@ -170,11 +170,11 @@
 
 **接口：** 消费任务 2、3、5、7 的身份、配额、患者范围和表单版本。提供 `visible_studies(actor) -> QuerySet[Study]`、`create_study(actor, data: dict) -> Study`、`update_study(actor, study_id: UUID, data: dict, expected_revision: int) -> Study`、`set_study_state(actor, study_id: UUID, state: Literal['draft','active','paused','ended'], expected_revision: int) -> Study`、`delete_study/restore_study(actor, study_id: UUID, expected_revision: int) -> Study`、`set_study_members(actor, study_id: UUID, doctor_ids: list[UUID], expected_revision: int) -> Study`、`save_protocol(actor, study_id: UUID, stages: list[dict], expected_revision: int) -> Study`、`require_study_member(actor, study_id: UUID) -> Study`；API `/api/studies/`、`/{id}/members/`、`/protocol/`、`/start/`、`/pause/`、`/resume/`、`/end/`。阶段类型 `screening/baseline/followup/end`，绑定含 `form_version_id/respondent/required`，填写对象值为 `doctor/patient`。
 
-- [ ] 写 `test_protocol_requires_one_baseline`：零或两次基线均 `assert response.status_code == 409`；筛选和结束各至多一次且分别首位、末位，基线偏移为 0，偏差非负、偏移非递减、至少一份必需表单，非法跨租户版本拒绝。研究成员只读流程、负责人和管理员可编辑；研究草稿和结束均占配额，跨租户 ID 不泄露内容。
-- [ ] 运行 `uv run pytest tests/test_studies.py -q`，确认项目与流程接口缺失导致失败。
-- [ ] 实现研究 CRUD、自动负责人成员关系、状态与阶段绑定，安装研究计数触发器。保护负责未结束研究的医生，保护被进行中/暂停研究引用的表单。前端用 Tabs、Table、Form 配置基本信息、成员和访视，表单选择固定版本 UUID。
-- [ ] 运行以上测试和前端构建，验证未加入研究的医生不见项目，不因可读模板而获得研究权限。
-- [ ] 提交本任务文件，提交说明：`功能：实现研究项目成员和访视配置`。
+- [x] 写 `test_protocol_requires_one_baseline`：零或两次基线均 `assert response.status_code == 409`；筛选和结束各至多一次且分别首位、末位，基线偏移为 0，偏差非负、偏移非递减、至少一份必需表单，非法跨租户版本拒绝。研究成员只读流程、负责人和管理员可编辑；研究草稿和结束均占配额，跨租户 ID 不泄露内容。
+- [x] 运行 `uv run pytest tests/test_studies.py -q`，确认项目与流程接口缺失导致失败。
+- [x] 实现研究 CRUD、自动负责人成员关系、状态与阶段绑定，安装研究计数触发器。保护负责未结束研究的医生，保护被进行中/暂停研究引用的表单。前端用 Tabs、Table、Form 配置基本信息、成员和访视，表单选择固定版本 UUID。
+- [x] 运行以上测试和前端构建，验证未加入研究的医生不见项目，不因可读模板而获得研究权限。
+- [x] 提交本任务文件，提交说明：`功能：实现研究项目成员和访视配置`。
 
 ### Task 10: 受试者入组与访视实例
 
