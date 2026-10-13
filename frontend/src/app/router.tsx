@@ -1,22 +1,23 @@
-import {AuditPage} from '../features/governance/AuditPage';
-import {RecycleBinPage} from '../features/governance/RecycleBinPage';
-import {DashboardPage} from '../features/dashboard/DashboardPage';
-import {VisitCalendar} from '../features/followups/VisitCalendar';
-import {VisitDetail} from '../features/followups/VisitDetail';
-import {EnrollmentDetail} from '../features/followups/EnrollmentDetail';
-import {StudiesPage} from '../features/studies/StudiesPage';
-import {StudyDetail} from '../features/studies/StudyDetail';
-import {FormDesigner} from '../features/forms/FormDesigner';
-import {FormsPage} from '../features/forms/FormsPage';
-import {PatientsPage} from '../features/patients/PatientsPage';
+import {lazy} from 'react';
+const AuditPage=lazy(()=>import('../features/governance/AuditPage').then(module=>({default:module.AuditPage})));
+const RecycleBinPage=lazy(()=>import('../features/governance/RecycleBinPage').then(module=>({default:module.RecycleBinPage})));
+const DashboardPage=lazy(()=>import('../features/dashboard/DashboardPage').then(module=>({default:module.DashboardPage})));
+const VisitCalendar=lazy(()=>import('../features/followups/VisitCalendar').then(module=>({default:module.VisitCalendar})));
+const VisitDetail=lazy(()=>import('../features/followups/VisitDetail').then(module=>({default:module.VisitDetail})));
+const EnrollmentDetail=lazy(()=>import('../features/followups/EnrollmentDetail').then(module=>({default:module.EnrollmentDetail})));
+const StudiesPage=lazy(()=>import('../features/studies/StudiesPage').then(module=>({default:module.StudiesPage})));
+const StudyDetail=lazy(()=>import('../features/studies/StudyDetail').then(module=>({default:module.StudyDetail})));
+const FormDesigner=lazy(()=>import('../features/forms/FormDesigner').then(module=>({default:module.FormDesigner})));
+const FormsPage=lazy(()=>import('../features/forms/FormsPage').then(module=>({default:module.FormsPage})));
+const PatientsPage=lazy(()=>import('../features/patients/PatientsPage').then(module=>({default:module.PatientsPage})));
 import {createBrowserRouter,Navigate,Outlet} from 'react-router-dom';
 import {Spin,Result} from 'antd';
 import {useAuth} from '../features/auth/AuthProvider';
-import {LoginPage} from '../features/auth/LoginPage';
-import {ChangePasswordPage} from '../features/auth/ChangePasswordPage';
+const LoginPage=lazy(()=>import('../features/auth/LoginPage').then(module=>({default:module.LoginPage})));
+const ChangePasswordPage=lazy(()=>import('../features/auth/ChangePasswordPage').then(module=>({default:module.ChangePasswordPage})));
 import {AdminLayout} from './AdminLayout';
-import {DoctorsPage} from '../features/doctors/DoctorsPage';
-import {TenantsPage} from '../features/tenants/TenantsPage';
+const DoctorsPage=lazy(()=>import('../features/doctors/DoctorsPage').then(module=>({default:module.DoctorsPage})));
+const TenantsPage=lazy(()=>import('../features/tenants/TenantsPage').then(module=>({default:module.TenantsPage})));
 function AuthGate(){const {actor,loading}=useAuth();if(loading)return <div className="full-spin"><Spin size="large"/></div>;if(!actor)return <Navigate to="/login" replace/>;if(actor.must_change_password)return <Navigate to="/change-password" replace/>;return <Outlet/>}
 function RoleGate({platform}:{platform:boolean}){const {actor}=useAuth();return (actor?.role==='platform_admin')===platform?<Outlet/>:<Result status="403" title="当前身份没有此页面权限"/>}
 function TenantAdminGate(){const {actor}=useAuth();return actor?.role==='tenant_admin'?<Outlet/>:<Result status="403" title="此页面仅机构管理员可访问"/>}

@@ -149,7 +149,9 @@
                         "string",
                         "number",
                         "boolean"
-                      ]
+                      ],
+                      "minimum": -1000000000000.0,
+                      "maximum": 1000000000000.0
                     }
                   },
                   "required": [

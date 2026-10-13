@@ -18,5 +18,56 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: &vispect_backend_environment
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?请配置应用密钥}
+      DJANGO_DEBUG: "false"
+      DJANGO_COOKIE_SECURE: ${DJANGO_COOKIE_SECURE:-true}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+      VISPECT_DATABASE_HOST: db
+      VISPECT_DATABASE_PORT: "5432"
+      VISPECT_APP_PASSWORD: ${VISPECT_APP_PASSWORD}
+      VISPECT_CONTROL_PASSWORD: ${VISPECT_CONTROL_PASSWORD}
+      VISPECT_OWNER_PASSWORD: ${VISPECT_OWNER_PASSWORD}
+      VISPECT_MANAGEMENT: "1"
+    command: ["python", "manage.py", "migrate", "--database", "migration", "--noinput"]
+    depends_on:
+      db:
+        condition: service_healthy
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: "false"
+      DJANGO_COOKIE_SECURE: ${DJANGO_COOKIE_SECURE:-true}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+      VISPECT_DATABASE_HOST: db
+      VISPECT_DATABASE_PORT: "5432"
+      VISPECT_APP_PASSWORD: ${VISPECT_APP_PASSWORD}
+      VISPECT_CONTROL_PASSWORD: ${VISPECT_CONTROL_PASSWORD}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health/').read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
 volumes:
   vispect_pg:

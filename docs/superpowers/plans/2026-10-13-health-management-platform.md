@@ -242,10 +242,10 @@
 
 **接口：** 提供一个可重复的本地启动路径、数据库所有者迁移步骤、演示初始化步骤与完整验证命令；生产启动 Django 用 WSGI 服务，Nginx 同源代理 `/api/`，不部署开发服务器或嵌入密钥。
 
-- [ ] 写 Playwright 测试 `管理员完成研究闭环` 与 `跨租户及非负责医生不能访问患者`：管理员建患者和研究、发布表单、配置访视、筛选/确认、医生代录、提交/完成、日历查看及导出；使用第二租户和另一医生直接访问已知 ID，`expect(response.status()).toBe(404); await expect(page.getByText(restrictedPatientName)).toHaveCount(0)`。下载工作簿可打开，完成访视后编辑被拒绝。
-- [ ] 运行 `pnpm exec playwright test`，确认未完成集成或运行配置缺失时失败；区分环境未就绪与业务断言失败。
-- [ ] 实现构建/启动/迁移配置及 README，配置 CI 使用 PostgreSQL 和同样的受限角色；完善健康检查和演示登录说明。记录使用实际 Docker/PostgreSQL 的要求；当前沙箱不能访问 Docker socket 时，执行阶段按授权流程解决运行权限，不用假数据库交付。
-- [ ] 运行后端全套 `uv run pytest -q`、`uv run python manage.py makemigrations --check --dry-run`、`uv run python manage.py check`；前端 `pnpm test --run`、`pnpm typecheck`、`pnpm build`、`pnpm exec playwright test`。所有结果通过后，只因新修改或新问题重复相关测试。
+- [x] 写 Playwright 测试 `管理员完成研究闭环` 与 `跨租户及非负责医生不能访问患者`：管理员建患者和研究、发布表单、配置访视、筛选/确认、医生代录、提交/完成、日历查看及导出；使用第二租户和另一医生直接访问已知 ID，`expect(response.status()).toBe(404); await expect(page.getByText(restrictedPatientName)).toHaveCount(0)`。下载工作簿可打开，完成访视后编辑被拒绝。
+- [x] 运行 `pnpm exec playwright test`，确认未完成集成或运行配置缺失时失败；区分环境未就绪与业务断言失败。
+- [x] 实现构建/启动/迁移配置及 README，配置 CI 使用 PostgreSQL 和同样的受限角色；完善健康检查和演示登录说明。记录使用实际 Docker/PostgreSQL 的要求；当前沙箱不能访问 Docker socket 时，执行阶段按授权流程解决运行权限，不用假数据库交付。
+- [x] 运行后端全套 `uv run pytest -q`、`uv run python manage.py makemigrations --check --dry-run`、`uv run python manage.py check`；前端 `pnpm test --run`、`pnpm typecheck`、`pnpm build`、`pnpm exec playwright test`。所有结果通过后，只因新修改或新问题重复相关测试。
 - [ ] 在真实浏览器检查管理员、医生和超级管理员页面及标准 Ant Design 组件；最后进行一次独立代码评审，修复经验证的反馈并运行受影响检查。提交交付材料，提交说明：`交付：完成全流程验收和启动部署说明`，随后按用户选定的方式交付，不自行上线托管。
 
 ## 覆盖核对

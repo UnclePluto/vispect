@@ -19,3 +19,7 @@ test('编辑属性及必填，保存冲突保留未保存内容',async()=>{
  render(<QueryClientProvider client={new QueryClient()}><App><MemoryRouter initialEntries={['/forms/f']}><Routes><Route path="/forms/:id" element={<FormDesigner/>}/></Routes></MemoryRouter></App></QueryClientProvider>);
  const title=await screen.findByLabelText('题目标题');await userEvent.clear(title);await userEvent.type(title,'尚未保存的新问题');await userEvent.click(screen.getByRole('switch',{name:'必填'}));await userEvent.click(screen.getByRole('button',{name:'保存草稿'}));expect(await screen.findByText('记录已被其他人修改')).toBeInTheDocument();expect(title).toHaveValue('尚未保存的新问题');expect(screen.getByRole('switch',{name:'必填'})).toBeChecked();
 });
+test('复制保留有效显示条件及选项跳题，并使用新选项ID',()=>{
+ const d:FormDefinition={protocol_version:1,title:'复制规则',questions:[{id:'first',title:'前置题',type:'text'},{id:'choice',title:'选择',type:'radio',options:[{id:'yes',label:'是'}],condition:{mode:'all',rules:[{question_id:'first',operator:'answered'}]},jumps:{yes:'last'}},{id:'last',title:'最后题',type:'text'}]};
+ const cloned=cloneField(d,'choice').questions[2];expect(cloned.condition).toEqual(d.questions[1].condition);expect(cloned.options?.[0].id).not.toBe('yes');expect(cloned.jumps?.[cloned.options![0].id]).toBe('last');
+});

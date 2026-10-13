@@ -5,18 +5,28 @@ from jsonschema import Draft7Validator
 SCHEMA=json.loads((Path(__file__).resolve().parents[3]/'contracts/form-definition.schema.json').read_text())
 VALIDATOR=Draft7Validator(SCHEMA)
 
+def valid_text(value):
+    return all(ord(c)!=0 and not 0xD800<=ord(c)<=0xDFFF for c in value)
+
+def valid_json_text(value):
+    if isinstance(value,str):return valid_text(value)
+    if isinstance(value,list):return all(valid_json_text(v) for v in value)
+    if isinstance(value,dict):return all(valid_text(k) and valid_json_text(v) for k,v in value.items())
+    return True
+
 def validate_definition(definition,publish=False):
     invalid={'_definition':['invalid_definition']}
     try:
         if list(VALIDATOR.iter_errors(definition)):return invalid
         json.dumps(definition,allow_nan=False)
+        if not valid_json_text(definition):return invalid
         questions=definition['questions'];ids=[q['id'] for q in questions]
         if len(ids)!=len(set(ids)):return invalid
         if publish and (not definition['title'].strip() or not questions):return invalid
         for i,q in enumerate(questions):
             kind=q['type'];options=q.get('options',[]);option_ids=[o['id'] for o in options]
             if publish and not q['title'].strip():return invalid
-            if len(option_ids)!=len(set(option_ids)):return invalid
+            if len(option_ids)!=len(set(option_ids)) or any(not o['label'].strip() for o in options):return invalid
             if kind in ['radio','checkbox','select'] and not options:return invalid
             if kind not in ['radio','checkbox','select'] and 'options' in q:return invalid
             for lo,hi in [('min','max'),('min_length','max_length'),('min_selections','max_selections')]:

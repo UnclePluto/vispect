@@ -1,8 +1,8 @@
 import math,re
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal,localcontext
 from dataclasses import dataclass
-from .definition import validate_definition
+from .definition import validate_definition,valid_text
 
 @dataclass
 class EvaluationResult:
@@ -32,14 +32,20 @@ def condition_matches(condition,answers):
 def answer_error(q,value):
     kind=q['type']
     if kind in ['text','textarea']:
-        if not isinstance(value,str):return 'invalid_type'
+        if not isinstance(value,str) or not valid_text(value):return 'invalid_type'
         if len(value)<q.get('min_length',0) or len(value)>q.get('max_length',100000):return 'length'
     elif kind in ['number','slider']:
-        if type(value) not in [int,float] or not math.isfinite(value):return 'invalid_type'
+        if type(value) not in [int,float]:return 'invalid_type'
+        try:
+            if not math.isfinite(value):return 'invalid_type'
+        except OverflowError:return 'invalid_type'
         if value<q.get('min',-1e12) or value>q.get('max',1e12):return 'out_of_range'
         decimal=Decimal(str(value))
         if 'precision' in q and max(0,-decimal.normalize().as_tuple().exponent)>q['precision']:return 'precision'
-        if kind=='slider' and (decimal-Decimal(str(q['min'])))%Decimal(str(q['step']))!=0:return 'step'
+        if kind=='slider':
+            with localcontext() as context:
+                context.prec=400
+                if (decimal-Decimal(str(q['min'])))%Decimal(str(q['step']))!=0:return 'step'
     elif kind=='date':
         if not isinstance(value,str):return 'invalid_type'
         try:

@@ -1,4 +1,4 @@
-import {render,screen,waitFor} from '@testing-library/react';
+import {act,render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 import {http,HttpResponse} from 'msw';
@@ -33,5 +33,23 @@ test('初始身份迟到不能覆盖新登录机构',async()=>{
     server.use(http.get('*/api/auth/me/',async()=>{await gate;return HttpResponse.json(identity)}),http.post('*/api/auth/tenant-login/',()=>HttpResponse.json({...identity,name:'乙机构管理员',tenant_id:'tenant-b',tenant:{id:'tenant-b',slug:'b',name:'乙机构'}})));
     render(<QueryClientProvider client={new QueryClient()}><AuthProvider><Probe/></AuthProvider></QueryClientProvider>);
     await userEvent.click(screen.getByRole('button',{name:'登录乙机构'}));expect(await screen.findByText('乙机构管理员')).toBeInTheDocument();
-    release();await screen.findByText('身份读取完成');await waitFor(()=>expect(screen.getByText('乙机构管理员')).toBeInTheDocument());
+    expect(screen.getByText('身份读取完成')).toBeInTheDocument();release();await screen.findByText('身份读取完成');await waitFor(()=>expect(screen.getByText('乙机构管理员')).toBeInTheDocument());
+});
+test('迟到的旧会话401不能清除新登录机构',async()=>{
+ let release!:()=>void,started!:()=>void;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>started=r);
+ server.use(http.get('*/api/patients/',async()=>{started();await gate;return HttpResponse.json({code:'session_unavailable',message:'旧会话失效',fields:{}},{status:401})}),http.post('*/api/auth/tenant-login/',()=>HttpResponse.json({...identity,name:'乙机构管理员',tenant_id:'tenant-b'})));
+ render(<QueryClientProvider client={new QueryClient()}><AuthProvider><Probe/></AuthProvider></QueryClientProvider>);
+ await screen.findByText('甲机构管理员');const stale=api('/api/patients/').catch(()=>{});await ready;await userEvent.click(screen.getByRole('button',{name:'登录乙机构'}));await screen.findByText('乙机构管理员');await act(async()=>{release();await stale});expect(screen.getByText('乙机构管理员')).toBeInTheDocument();
+});
+test('等待CSRF期间切换账号会取消旧创建请求',async()=>{
+ let release!:()=>void,started!:()=>void,calls=0,csrfCalls=0;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>started=r);
+ server.use(http.get('*/api/auth/csrf/',async()=>{csrfCalls++;if(csrfCalls===1){started();await gate}return HttpResponse.json({csrf_token:'csrf'})}),http.post('*/api/doctors/',()=>{calls++;return HttpResponse.json({id:'wrong-tenant'})}),http.post('*/api/auth/tenant-login/',()=>HttpResponse.json({...identity,name:'乙机构管理员',tenant_id:'tenant-b'})));
+ render(<QueryClientProvider client={new QueryClient()}><AuthProvider><Probe/></AuthProvider></QueryClientProvider>);await screen.findByText('甲机构管理员');
+ const stale=api('/api/doctors/',{method:'POST',body:{name:'旧机构医生'}}).catch(()=>{});await ready;await userEvent.click(screen.getByRole('button',{name:'登录乙机构'}));await screen.findByText('乙机构管理员');await act(async()=>{release();await stale});expect(calls).toBe(0);
+});
+import {download} from '../../api/client';
+test('旧下载请求的401不清除新会话',async()=>{
+ let release!:()=>void,started!:()=>void;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>started=r);
+ server.use(http.get('*/api/old-export/',async()=>{started();await gate;return HttpResponse.json({code:'session_unavailable',message:'旧会话',fields:{}},{status:401})}),http.post('*/api/auth/tenant-login/',()=>HttpResponse.json({...identity,name:'乙机构管理员',tenant_id:'tenant-b'})));
+ render(<QueryClientProvider client={new QueryClient()}><AuthProvider><Probe/></AuthProvider></QueryClientProvider>);await screen.findByText('甲机构管理员');const stale=download('/api/old-export/','answer.xlsx').catch(()=>{});await ready;await userEvent.click(screen.getByRole('button',{name:'登录乙机构'}));await screen.findByText('乙机构管理员');await act(async()=>{release();await stale});expect(screen.getByText('乙机构管理员')).toBeInTheDocument();
 });

@@ -2,9 +2,9 @@ from rest_framework import serializers
 from .quota import RESOURCES
 
 class LimitsSerializer(serializers.Serializer):
-    doctors=serializers.IntegerField(min_value=0)
-    patients=serializers.IntegerField(min_value=0)
-    studies=serializers.IntegerField(min_value=0)
+    doctors=serializers.IntegerField(min_value=0,max_value=2147483647)
+    patients=serializers.IntegerField(min_value=0,max_value=2147483647)
+    studies=serializers.IntegerField(min_value=0,max_value=2147483647)
 
 class TenantWriteSerializer(serializers.Serializer):
     slug=serializers.SlugField(max_length=64)

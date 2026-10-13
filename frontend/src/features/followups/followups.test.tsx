@@ -38,3 +38,11 @@ test('筛选完成后单独确认入组，编号保留前导零',async()=>{
  render(wrapper(<AuthProvider><EnrollmentDialog open study={{id:'s'} as Study} subject={{id:'e',state:'awaiting_enrollment'} as Enrollment} onCancel={()=>{}} onSaved={saved}/></AuthProvider>));
  await screen.findByLabelText('入组编号');await waitFor(()=>expect(screen.getByLabelText('入组日期')).toHaveValue(shanghaiToday()));await userEvent.type(screen.getByLabelText('入组编号'),'000001');await userEvent.click(screen.getByRole('button',{name:'确认入组'}));await waitFor(()=>expect(saved).toHaveBeenCalledOnce());
 });
+
+test('从关闭状态打开确认入组时填入上海当前日期',async()=>{
+ const subject={id:'e',state:'awaiting_enrollment'} as Enrollment;
+ const content=(open:boolean)=>wrapper(<AuthProvider><EnrollmentDialog open={open} study={{id:'s'} as Study} subject={subject} onCancel={()=>{}} onSaved={()=>{}}/></AuthProvider>);
+ server.use(http.get('*/api/auth/me/',()=>HttpResponse.json({role:'doctor',doctor_id:'d',must_change_password:false})));
+ const {rerender}=render(content(false));rerender(content(true));
+ await waitFor(()=>expect(screen.getByLabelText('入组日期')).toHaveValue(shanghaiToday()));
+});

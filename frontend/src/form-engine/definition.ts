@@ -2,16 +2,18 @@ import Ajv from 'ajv';
 import schema from '../../../contracts/form-definition.schema.json';
 import type {FormDefinition} from './types';
 const validate=new Ajv({strict:false,strictNumbers:true}).compile(schema);
+export function validText(value:string){return [...value].every(c=>{const point=c.codePointAt(0)!;return point!==0&&!(point>=0xD800&&point<=0xDFFF)})}
+function validJSONText(value:unknown):boolean{if(typeof value==='string')return validText(value);if(Array.isArray(value))return value.every(validJSONText);if(value&&typeof value==='object')return Object.entries(value).every(([key,v])=>validText(key)&&validJSONText(v));return true}
 export function validateDefinition(definition:FormDefinition,publish=false):Record<string,string[]>{
  const invalid={_definition:['invalid_definition']};
- if(!validate(definition))return invalid;
+ if(!validate(definition)||!validJSONText(definition))return invalid;
  const questions=definition.questions,ids=questions.map(q=>q.id);
  if(new Set(ids).size!==ids.length)return invalid;
  if(publish&&(!definition.title.trim()||!questions.length))return invalid;
  for(const [i,q] of questions.entries()){
   const kind=q.type,options=q.options??[],optionIds=options.map(o=>o.id);
   if(publish&&!q.title.trim())return invalid;
-  if(new Set(optionIds).size!==optionIds.length)return invalid;
+  if(new Set(optionIds).size!==optionIds.length||options.some(o=>!o.label.trim()))return invalid;
   if(['radio','checkbox','select'].includes(kind)&&!options.length)return invalid;
   if(!['radio','checkbox','select'].includes(kind)&&q.options!==undefined)return invalid;
   for(const [lo,hi] of [[q.min,q.max],[q.min_length,q.max_length],[q.min_selections,q.max_selections]])if(lo!==undefined&&hi!==undefined&&lo>hi)return invalid;

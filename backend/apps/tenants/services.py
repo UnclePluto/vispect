@@ -35,8 +35,8 @@ def update_tenant(actor,tenant_id,data,expected_revision):
         quota=TenantQuota.objects.using('control').select_for_update().get(tenant=tenant)
         if 'limits' in data:
             for resource,limit in data['limits'].items():
-                if resource not in RESOURCES or not isinstance(limit,int) or isinstance(limit,bool) or limit<0:
-                    raise ApiError('validation_error','数量上限必须为非负整数',status=400)
+                if resource not in RESOURCES or not isinstance(limit,int) or isinstance(limit,bool) or not 0<=limit<=2147483647:
+                    raise ApiError('validation_error','数量上限必须为 0 至 2147483647 的整数',status=400)
                 if limit<getattr(quota,f'{resource}_used'):
                     raise ApiError('quota_below_usage','数量上限不能低于当前使用量')
                 setattr(quota,f'{resource}_limit',limit)

@@ -48,3 +48,8 @@ def test_empty_password_preserves_administrator_password(world):
     response=client.patch(f'/api/platform/tenants/{tenant.id}/administrator/',{'username':'admin','name':'更新管理员','enabled':True,'password':'','expected_revision':1},format='json',HTTP_X_CSRFTOKEN=token)
     assert response.status_code == 200
     assert world.login('a','tenant_admin').get('/api/auth/me/').json()['name'] == '更新管理员'
+
+def test_quota_limit_over_database_range_is_validation_error(world):
+    client=world.login(None,'platform_admin')
+    response=world.post(client,'/api/platform/tenants/',{'slug':'too-large','name':'边界机构','admin_username':'admin','admin_password':world.password,'limits':{'doctors':2147483648,'patients':10,'studies':10}})
+    assert response.status_code==400

@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+**/.venv
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/test-results
+**/playwright-report
+.superpowers
+.playwright-cli
+output

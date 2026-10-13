@@ -1,4 +1,4 @@
-import {validateDefinition} from './definition';
+import {validateDefinition,validText} from './definition';
 import type {FormDefinition,Question,JSONValue,EvaluationResult} from './types';
 const missing=(value:JSONValue|undefined)=>value===undefined||value===null||value===''||(Array.isArray(value)&&value.length===0);
 function conditionMatches(condition:Question['condition'],answers:Record<string,JSONValue>):boolean{
@@ -15,7 +15,7 @@ function decimal(value:number):[bigint,number]{const [base,exponent='0']=String(
 function precision(value:number){let [coefficient,scale]=decimal(value);while(coefficient!==0n&&coefficient%10n===0n){coefficient/=10n;scale--}return coefficient===0n?0:Math.max(0,scale)}
 function onStep(value:number,min:number,step:number){const values=[decimal(value),decimal(min),decimal(step)],scale=Math.max(0,...values.map(v=>v[1]));const [a,b,c]=values.map(([n,s])=>n*10n**BigInt(scale-s));return (a-b)%c===0n;}
 function answerError(q:Question,value:JSONValue):string|undefined{
- if(q.type==='text'||q.type==='textarea'){if(typeof value!=='string')return 'invalid_type';if(Array.from(value).length<(q.min_length??0)||Array.from(value).length>(q.max_length??100000))return 'length'}
+ if(q.type==='text'||q.type==='textarea'){if(typeof value!=='string'||!validText(value))return 'invalid_type';if(Array.from(value).length<(q.min_length??0)||Array.from(value).length>(q.max_length??100000))return 'length'}
  else if(q.type==='number'||q.type==='slider'){if(typeof value!=='number'||!Number.isFinite(value))return 'invalid_type';if(value<(q.min??-1e12)||value>(q.max??1e12))return 'out_of_range';if(q.precision!==undefined&&precision(value)>q.precision)return 'precision';if(q.type==='slider'&&!onStep(value,q.min!,q.step!))return 'step'}
  else if(q.type==='date'){if(typeof value!=='string')return 'invalid_type';if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value))return 'invalid_date';const [year,month,day]=value.split('-').map(Number);const days=[31,year%4===0&&(year%100!==0||year%400===0)?29:28,31,30,31,30,31,31,30,31,30,31];if(year<1||month<1||month>12||day<1||day>days[month-1])return 'invalid_date'}
  else if(q.type==='radio'||q.type==='select'){if(typeof value!=='string')return 'invalid_type';if(!q.options?.some(o=>o.id===value))return 'invalid_option'}

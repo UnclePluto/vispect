@@ -1101,5 +1101,223 @@
         ]
       }
     }
+  },
+  {
+    "name": "拒绝NUL",
+    "definition": {
+      "protocol_version": 1,
+      "title": "边界测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "文本"
+        }
+      ]
+    },
+    "answers": {
+      "a": "\u0000"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_type"
+        ]
+      }
+    }
+  },
+  {
+    "name": "拒绝孤立代理字符",
+    "definition": {
+      "protocol_version": 1,
+      "title": "边界测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "文本"
+        }
+      ]
+    },
+    "answers": {
+      "a": "\ud800"
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_type"
+        ]
+      }
+    }
+  },
+  {
+    "name": "巨大整数",
+    "definition": {
+      "protocol_version": 1,
+      "title": "边界测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "数值"
+        }
+      ]
+    },
+    "answers": {
+      "a": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "invalid_type"
+        ]
+      }
+    }
+  },
+  {
+    "name": "极小滑条值",
+    "definition": {
+      "protocol_version": 1,
+      "title": "边界测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "slider",
+          "title": "滑条",
+          "min": -1,
+          "max": 1,
+          "step": 0.1
+        }
+      ]
+    },
+    "answers": {
+      "a": 5e-324
+    },
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [
+        "a"
+      ],
+      "answers": {},
+      "errors": {
+        "a": [
+          "step"
+        ]
+      }
+    }
+  },
+  {
+    "name": "定义拒绝NUL",
+    "definition": {
+      "protocol_version": 1,
+      "title": "边界测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "text",
+          "title": "无效\u0000标题"
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
+  },
+  {
+    "name": "选项文案非空白",
+    "definition": {
+      "protocol_version": 1,
+      "title": "边界测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "radio",
+          "title": "选择",
+          "options": [
+            {
+              "id": "x",
+              "label": "   "
+            }
+          ]
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
+  },
+  {
+    "name": "条件数值边界",
+    "definition": {
+      "protocol_version": 1,
+      "title": "边界测试",
+      "questions": [
+        {
+          "id": "a",
+          "type": "number",
+          "title": "数字"
+        },
+        {
+          "id": "b",
+          "type": "text",
+          "title": "条件题",
+          "condition": {
+            "mode": "all",
+            "rules": [
+              {
+                "question_id": "a",
+                "operator": "gt",
+                "value": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "answers": {},
+    "mode": "submit",
+    "expected": {
+      "visible_ids": [],
+      "answers": {},
+      "errors": {
+        "_definition": [
+          "invalid_definition"
+        ]
+      }
+    },
+    "definition_invalid": true
   }
 ]
