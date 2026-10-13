@@ -84,3 +84,12 @@ class TestWorld:
         actor=self.actor(tenant,'tenant_admin')
         form=create_form(actor,definition or {'protocol_version':1,'title':'测试表单','questions':[{'id':'q1','type':'text','title':'测试题目','required':True}]})
         return publish_form(actor,form.id,form.revision,uuid.uuid4().hex)
+
+    def study(self,tenant,screening=False):
+        from apps.studies.services import create_study,save_protocol,set_study_state
+        actor=self.actor(tenant,'doctor');version=self.form_version(tenant)
+        s=create_study(actor,{'name':'测试研究','code':uuid.uuid4().hex[:10]})
+        def stage(kind,offset):return {'name':kind,'kind':kind,'offset_days':offset,'window_before':0,'window_after':3,'bindings':[{'form_version_id':str(version.id),'respondent':'patient','required':True}]}
+        stages=([stage('screening',0)] if screening else [])+[stage('baseline',0),stage('followup',30)]
+        s=save_protocol(actor,s.id,stages,s.revision)
+        return set_study_state(actor,s.id,'active',s.revision)

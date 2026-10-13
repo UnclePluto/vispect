@@ -43,7 +43,12 @@ def assign_doctors(actor,patient_id,doctor_ids,expected_revision):
     require_tenant(actor);require_role(actor,'tenant_admin')
     def mutation():
         patient=get_object(visible_patients(actor),patient_id,True);ensure_revision(patient,expected_revision)
-        doctors=validate_doctors(actor,doctor_ids);replace_doctors(actor,patient,doctors)
+        doctors=validate_doctors(actor,doctor_ids)
+        from apps.followups.models import Enrollment
+        from apps.followups.selectors import ACTIVE_STATES
+        if Enrollment.objects.filter(patient=patient,state__in=ACTIVE_STATES).exclude(doctor_id__in=[d.id for d in doctors]).exists():
+            raise ApiError('followup_transfer_required','请先转交该医生尚未结束的随访职责')
+        replace_doctors(actor,patient,doctors)
         patient.revision+=1;patient.save();patient._prefetched_objects_cache={}
         audit(actor,'assign_doctors','patient',patient.id,{'doctor_ids':[str(d.id) for d in doctors]});return patient
     return mutate_with_quota(actor,'patients',mutation,delta=0)
@@ -52,6 +57,10 @@ def delete_patient(actor,patient_id,expected_revision):
     require_tenant(actor)
     def mutation():
         patient=get_object(visible_patients(actor),patient_id,True);ensure_revision(patient,expected_revision)
+        from apps.followups.models import Enrollment
+        from apps.followups.selectors import ACTIVE_STATES
+        if Enrollment.objects.filter(patient=patient,state__in=ACTIVE_STATES).exists():
+            raise ApiError('patient_has_followups','请先完成或停止进行中的随访')
         patient.deleted_at=timezone.now();patient.revision+=1;patient.save();audit(actor,'delete','patient',patient.id,{});return patient
     return mutate_with_quota(actor,'patients',mutation,delta=-1)
 

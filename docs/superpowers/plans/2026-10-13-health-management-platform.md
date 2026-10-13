@@ -182,11 +182,11 @@
 
 **接口：** 消费任务 5 的 `visible_patients` 与任务 9 的 `require_study_member`，两者交集用于患者数据。提供 `add_subject(actor, study_id: UUID, patient_id: UUID, doctor_id: UUID, observation_code: str, key: str) -> Enrollment`、`confirm_enrollment(actor, enrollment_id: UUID, enrollment_code: str, enrolled_on: date, key: str) -> Enrollment`、`schedule_date(enrolled_on: date, offset_days: int) -> date`、`transfer_followup(actor, enrollment_id: UUID, doctor_id: UUID, expected_revision: int) -> Enrollment`、`visible_enrollments(actor) -> QuerySet[Enrollment]`、`visible_visits(actor) -> QuerySet[VisitInstance]`；API `/api/studies/{id}/subjects/`、`/api/enrollments/{id}/confirm/`、`/transfer/` 和 `/api/visits/`。访视状态为 `pending/completed/stopped`，`Enrollment.current_visit_id` 决定可填写阶段。
 
-- [ ] 写 `test_confirmation_is_idempotent`：相同 key 两次确认 `assert first.id == second.id; assert visit_count == len(non_screening_stages)`；`assert enrollment.enrollment_code == '000001'`，研究内重复拒绝；同患者两研究不增加患者用量。写筛选未完成不能确认、没有筛选可直接确认、首条受试者锁定流程、成员不开放其他患者，以及跨月/闰日/上海午夜的日期测试。
-- [ ] 运行 `uv run pytest tests/test_enrollments.py tests/test_schedule.py -q`，确认入组或生成逻辑缺失导致失败。
-- [ ] 实现状态 `screening/awaiting_enrollment/following/completed/stopped`，同患者同研究始终唯一。加入及确认锁定研究/入组行，冻结流程，绑定旧版本，计算相对入组日期的时间窗口；筛选窗口相对加入日期。转移职责后才允许移除成员或负责关系，患者存在未停止随访时不能删除。
-- [ ] 运行以上测试，使用独立连接验证并发确认不重复；校验研究/患者/医生/阶段关联都同租户，医生同时是成员与患者负责医生。
-- [ ] 提交本任务文件，提交说明：`功能：实现患者入组和访视日程生成`。
+- [x] 写 `test_confirmation_is_idempotent`：相同 key 两次确认 `assert first.id == second.id; assert visit_count == len(non_screening_stages)`；`assert enrollment.enrollment_code == '000001'`，研究内重复拒绝；同患者两研究不增加患者用量。写筛选未完成不能确认、没有筛选可直接确认、首条受试者锁定流程、成员不开放其他患者，以及跨月/闰日/上海午夜的日期测试。
+- [x] 运行 `uv run pytest tests/test_enrollments.py tests/test_schedule.py -q`，确认入组或生成逻辑缺失导致失败。
+- [x] 实现状态 `screening/awaiting_enrollment/following/completed/stopped`，同患者同研究始终唯一。加入及确认锁定研究/入组行，冻结流程，绑定旧版本，计算相对入组日期的时间窗口；筛选窗口相对加入日期。转移职责后才允许移除成员或负责关系，患者存在未停止随访时不能删除。
+- [x] 运行以上测试，使用独立连接验证并发确认不重复；校验研究/患者/医生/阶段关联都同租户，医生同时是成员与患者负责医生。
+- [x] 提交本任务文件，提交说明：`功能：实现患者入组和访视日程生成`。
 
 ### Task 11: 答案、修订、访视完成与停止
 

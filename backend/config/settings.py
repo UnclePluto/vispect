@@ -9,7 +9,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
-INSTALLED_APPS = ["django.contrib.contenttypes", "django.contrib.auth", "django.contrib.sessions", "rest_framework", "apps.core", "apps.tenants", "apps.accounts", "apps.doctors", "apps.patients", "apps.forms", "apps.studies"]
+INSTALLED_APPS = ["django.contrib.contenttypes", "django.contrib.auth", "django.contrib.sessions", "rest_framework", "apps.core", "apps.tenants", "apps.accounts", "apps.doctors", "apps.patients", "apps.forms", "apps.studies", "apps.followups"]
 MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "apps.core.middleware.TenantContextMiddleware"]
 DATABASES = {"default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=0), "control": dj_database_url.parse(os.environ["CONTROL_DATABASE_URL"], conn_max_age=0)}
 if os.environ.get("VISPECT_MANAGEMENT") == "1" or "pytest" in sys.modules:

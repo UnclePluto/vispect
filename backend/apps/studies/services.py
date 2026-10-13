@@ -45,6 +45,10 @@ def set_study_members(actor,study_id,doctor_ids,expected_revision):
         study=get_object(editable_studies(actor),study_id,True);ensure_revision(study,expected_revision)
         if study.state=='ended':raise ApiError('study_ended','已结束研究不能修改成员')
         doctors=validate_doctors(actor,[*doctor_ids,study.owner_id]);ids={d.id for d in doctors}
+        from apps.followups.models import Enrollment
+        from apps.followups.selectors import ACTIVE_STATES
+        if Enrollment.objects.filter(study=study,state__in=ACTIVE_STATES).exclude(doctor_id__in=ids).exists():
+            raise ApiError('followup_transfer_required','请先转交该成员尚未结束的随访职责')
         StudyMember.objects.filter(study=study).exclude(doctor_id__in=ids).delete()
         for d in doctors:StudyMember.objects.get_or_create(tenant_id=actor.tenant_id,study=study,doctor=d)
         study.revision+=1;study.save();audit(actor,'members','study',study.id,{'doctor_ids':[str(i) for i in ids]});return study
@@ -106,6 +110,11 @@ def set_study_state(actor,study_id,state,expected_revision):
         if state not in transitions[study.state]:raise ApiError('invalid_state','当前研究不能执行该状态变更')
         if state=='active':
             validate_doctors(actor,[study.owner_id]);validate_protocol(actor,protocol_data(study))
+        if state=='ended':
+            from apps.followups.models import Enrollment
+            from apps.followups.selectors import ACTIVE_STATES
+            if Enrollment.objects.filter(study=study,state__in=ACTIVE_STATES).exists():
+                raise ApiError('study_has_followups','请先完成或停止全部受试者随访')
         study.state=state;study.revision+=1;study.save();audit(actor,'state','study',study.id,{'state':state});return study
     return mutate_with_quota(actor,'studies',mutation,delta=0)
 

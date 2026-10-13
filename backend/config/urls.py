@@ -15,3 +15,6 @@ urlpatterns += [path('api/forms/',FormsView.as_view()),path('api/forms/version-o
 
 from apps.studies.api import StudiesView,StudyDetailView,StudyMembersView,StudyProtocolView,StudyStateView
 urlpatterns += [path('api/studies/',StudiesView.as_view()),path('api/studies/<uuid:study_id>/',StudyDetailView.as_view()),path('api/studies/<uuid:study_id>/members/',StudyMembersView.as_view()),path('api/studies/<uuid:study_id>/protocol/',StudyProtocolView.as_view())] + [path('api/studies/<uuid:study_id>/'+action+'/',StudyStateView.as_view(state=state)) for action,state in [('start','active'),('resume','active'),('pause','paused'),('end','ended'),('restore','restore')]]
+
+from apps.followups.api import StudySubjectsView,EnrollmentDetailView,EnrollmentConfirmView,EnrollmentTransferView,VisitsView,VisitDetailView
+urlpatterns += [path('api/studies/<uuid:study_id>/subjects/',StudySubjectsView.as_view()),path('api/enrollments/<uuid:enrollment_id>/',EnrollmentDetailView.as_view()),path('api/enrollments/<uuid:enrollment_id>/confirm/',EnrollmentConfirmView.as_view()),path('api/enrollments/<uuid:enrollment_id>/transfer/',EnrollmentTransferView.as_view()),path('api/visits/',VisitsView.as_view()),path('api/visits/<uuid:visit_id>/',VisitDetailView.as_view())]

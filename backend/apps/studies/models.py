@@ -31,7 +31,7 @@ class VisitDefinition(TenantRecord):
     window_after=models.PositiveIntegerField(default=0)
     class Meta:
         ordering=['position']
-        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['study','position'],name='study_stage_position')]
+        constraints=[tenant_identity_constraint(),models.UniqueConstraint(fields=['study','position'],name='study_stage_position'),models.UniqueConstraint(fields=['tenant','id','study'],name='stage_tenant_id_study')]
 
 class FormBinding(TenantRecord):
     stage=models.ForeignKey(VisitDefinition,on_delete=models.PROTECT,related_name='bindings')
