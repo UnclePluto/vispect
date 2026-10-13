@@ -1,0 +1,22 @@
+name: vispect
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: vispect
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请配置数据库初始化密码}
+      VISPECT_OWNER_PASSWORD: ${VISPECT_OWNER_PASSWORD:?请配置迁移密码}
+      VISPECT_APP_PASSWORD: ${VISPECT_APP_PASSWORD:?请配置业务密码}
+      VISPECT_CONTROL_PASSWORD: ${VISPECT_CONTROL_PASSWORD:?请配置控制面密码}
+    ports:
+      - "127.0.0.1:${DATABASE_PORT:-55432}:5432"
+    volumes:
+      - vispect_pg:/var/lib/postgresql/data
+      - ./infra/postgres/init-roles.sql:/docker-entrypoint-initdb.d/01-roles.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d vispect"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  vispect_pg:

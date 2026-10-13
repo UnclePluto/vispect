@@ -68,7 +68,7 @@
 
 ---
 
-### 任务 1：可启动环境与 PostgreSQL 验证入口
+### Task 1: 可启动环境与 PostgreSQL 验证入口
 
 **文件：** 新建 `.gitignore`、`.env.example`、`compose.yaml`、`backend/pyproject.toml`、`backend/manage.py`、`backend/config/{settings,urls,wsgi}.py`、`backend/apps/core/{types,errors,health}.py`、`backend/tests/{conftest,test_health}.py`、`frontend/{package.json,index.html,vite.config.ts,vitest.config.ts,tsconfig.json}`、`frontend/src/{main.tsx,app/App.tsx,test/setup.ts}`、`infra/postgres/init-roles.sql`、`scripts/bootstrap-test-db.py`；生成 `backend/uv.lock` 与 `frontend/pnpm-lock.yaml`。业务包同时建立 Python 包入口与 Django AppConfig；各任务迁移路径为其业务包的 `migrations/`。
 
@@ -80,7 +80,7 @@
 - [ ] 运行 `uv run pytest tests/test_health.py -q` 与 `pnpm build`，均通过；检查 `current_user`、`rolsuper`、`rolbypassrls` 与表所有者，确认运行身份符合约束。
 - [ ] 提交本任务明确列出的运行环境文件，提交说明：`基础：建立前后端运行环境和数据库角色`。
 
-### 任务 2：租户上下文、账号与会话隔离
+### Task 2: 租户上下文、账号与会话隔离
 
 **文件：** 新建 `backend/apps/core/{context,middleware,permissions,rls}.py`、`backend/apps/tenants/{models,lookup}.py`、`backend/apps/accounts/{models,services,authentication,serializers,api}.py` 及首批迁移；新建 `backend/tests/{world,test_auth,test_rls}.py`；修改设置与路由。
 
@@ -92,7 +92,7 @@
 - [ ] 用实际受限账号运行以上测试，确认非表所有者；检查平台连接仅能读取允许的控制面数据；首次登录必须先改密码才能调用业务写接口。
 - [ ] 提交认证、上下文与迁移文件，提交说明：`功能：实现租户隔离和账号会话权限`。
 
-### 任务 3：租户控制面、配额与通用事务工具
+### Task 3: 租户控制面、配额与通用事务工具
 
 **文件：** 新建 `backend/apps/tenants/{quota,services,serializers,api}.py`、配额迁移；新建 `backend/apps/core/{models,idempotency,audit}.py`、核心迁移；新建 `backend/tests/{test_tenants,test_quota,test_idempotency}.py`。
 
@@ -104,7 +104,7 @@
 - [ ] 运行以上测试并检查平台用量响应不含业务内容；额度零拒绝写入，未实现的资源尚无记录时计数为零，不能用假数据替代统计。
 - [ ] 提交本任务文件，提交说明：`功能：实现租户管理配额和事务工具`。
 
-### 任务 4：管理布局、医生档案与并发配额
+### Task 4: 管理布局、医生档案与并发配额
 
 **文件：** 新建 `backend/apps/doctors/{models,services,serializers,api}.py`、医生/RLS/计数触发器迁移、`backend/tests/test_doctors.py`；新建 `frontend/src/{api/client.ts,api/types.ts,app/router.tsx,app/queryClient.ts,app/AdminLayout.tsx}`；新建 `frontend/src/features/auth/{api.ts,AuthProvider.tsx,LoginPage.tsx,ChangePasswordPage.tsx,auth.test.tsx}`、`features/tenants/{api.ts,TenantsPage.tsx,TenantEditor.tsx,tenants.test.tsx}`、`features/doctors/{api.ts,DoctorsPage.tsx,DoctorEditor.tsx,DoctorDetail.tsx,doctors.test.tsx}`，后两项同在 `frontend/src/`。
 
@@ -116,7 +116,7 @@
 - [ ] 运行本任务测试、`pnpm typecheck` 和 `pnpm build`；实际 API 验证医生自编辑仅允许基础资料，账号角色或 tenant 字段不能由表单覆盖。
 - [ ] 提交本任务文件，提交说明：`功能：实现医生管理和标准后台布局`。
 
-### 任务 5：患者档案、负责关系与可见范围
+### Task 5: 患者档案、负责关系与可见范围
 
 **文件：** 新建 `backend/apps/patients/{models,selectors,services,serializers,api}.py`、关联/RLS/计数迁移、`backend/tests/test_patients.py`；修改医生删除服务；新建 `frontend/src/features/patients/{api.ts,PatientsPage.tsx,PatientDetail.tsx,PatientEditor.tsx,patients.test.tsx}`。
 
@@ -128,7 +128,7 @@
 - [ ] 运行以上测试、类型检查和构建；管理员可查看本租户全部患者，医生搜索、分页数量与详情使用同一可见范围。
 - [ ] 提交本任务文件，提交说明：`功能：实现患者档案和医生负责关系`。
 
-### 任务 6：跨语言动态表单规则协议
+### Task 6: 跨语言动态表单规则协议
 
 **文件：** 新建 `contracts/{form-definition.schema.json,form-cases.json}`；新建 `backend/apps/forms/{definition,engine}.py`、`backend/tests/test_form_engine.py`；新建 `frontend/src/form-engine/{types,definition,engine,engine.test}.ts`。
 
@@ -140,7 +140,7 @@
 - [ ] 两端运行同一份 case 文件全部通过；新增规则先新增共用 case，不能各自维护两份预期。检查预览与正式填写将消费同一解释器。
 - [ ] 提交协议及两端解释器，提交说明：`功能：建立跨语言动态表单协议和规则引擎`。
 
-### 任务 7：表单目录、不可变发布版本与暂停
+### Task 7: 表单目录、不可变发布版本与暂停
 
 **文件：** 新建 `backend/apps/forms/{models,selectors,services,serializers,api}.py`、表单/RLS/版本保护迁移、`backend/tests/test_forms.py`；新建 `frontend/src/features/forms/{api.ts,FormsPage.tsx}`。
 
@@ -152,7 +152,7 @@
 - [ ] 运行以上测试及前端构建，确认目录查询不包含答案，发布响应包含明确版本 UUID。
 - [ ] 提交本任务文件，提交说明：`功能：实现表单发布版本和目录管理`。
 
-### 任务 8：Ant Design 表单设计器与共用填写组件
+### Task 8: Ant Design 表单设计器与共用填写组件
 
 **文件：** 新建 `frontend/src/features/forms/{FormDesigner,FieldPalette,QuestionList,FieldProperties,FormPreview}.tsx`、`designerState.ts`、`FormDesigner.test.tsx`；新建 `frontend/src/form-engine/{DynamicForm,FieldControl}.tsx` 与测试；修改前端路由。
 
@@ -164,7 +164,7 @@
 - [ ] 运行相关测试、类型检查和构建；在浏览器实际检查属性面板、弹窗和长题目在正常桌面窗口中可使用。
 - [ ] 提交本任务文件，提交说明：`功能：实现动态表单设计器和填写组件`。
 
-### 任务 9：研究项目、成员与访视定义
+### Task 9: 研究项目、成员与访视定义
 
 **文件：** 新建 `backend/apps/studies/{models,selectors,services,serializers,api}.py`、研究/RLS/配额/复合外键迁移、`backend/tests/test_studies.py`；修改医生删除和表单删除服务；新建 `frontend/src/features/studies/{api.ts,StudiesPage.tsx,StudyDetail.tsx,StudyEditor.tsx,ProtocolEditor.tsx}`。
 
@@ -176,7 +176,7 @@
 - [ ] 运行以上测试和前端构建，验证未加入研究的医生不见项目，不因可读模板而获得研究权限。
 - [ ] 提交本任务文件，提交说明：`功能：实现研究项目成员和访视配置`。
 
-### 任务 10：受试者入组与访视实例
+### Task 10: 受试者入组与访视实例
 
 **文件：** 新建 `backend/apps/followups/{models,enrollments,schedule,selectors,serializers,api}.py`、入组/访视/RLS/复合约束迁移、`backend/tests/{test_enrollments,test_schedule}.py`；修改研究成员、患者负责关系、医生及患者删除服务。
 
@@ -188,7 +188,7 @@
 - [ ] 运行以上测试，使用独立连接验证并发确认不重复；校验研究/患者/医生/阶段关联都同租户，医生同时是成员与患者负责医生。
 - [ ] 提交本任务文件，提交说明：`功能：实现患者入组和访视日程生成`。
 
-### 任务 11：答案、修订、访视完成与停止
+### Task 11: 答案、修订、访视完成与停止
 
 **文件：** 新建 `backend/apps/followups/{answers,transitions}.py`、答案与修订模型迁移、`backend/tests/{test_answers,test_transitions}.py`；修改跟随访 API 与序列化器。
 
@@ -200,7 +200,7 @@
 - [ ] 运行以上测试，补充独立连接的重复提交和并发完成；API 不能绕过当前阶段限制或编辑已完成/停止/结束数据。
 - [ ] 提交本任务文件，提交说明：`功能：实现答案填写修订和访视状态流转`。
 
-### 任务 12：授权 Excel 导出与修订查看
+### Task 12: 授权 Excel 导出与修订查看
 
 **文件：** 新建 `backend/apps/followups/{exports,history}.py`、`backend/tests/test_exports.py`；修改答案和研究 API。
 
@@ -212,7 +212,7 @@
 - [ ] 运行以上测试，重新读取工作簿校验单元格类型、编号和表名；访问答案历史时仍执行当前医生数据权限。
 - [ ] 提交本任务文件，提交说明：`功能：实现研究答案导出和修订记录查看`。
 
-### 任务 13：研究操作、访视日历与后台填写页面
+### Task 13: 研究操作、访视日历与后台填写页面
 
 **文件：** 新建 `frontend/src/features/followups/{api.ts,SubjectsTab.tsx,EnrollmentDialog.tsx,VisitCalendar.tsx,VisitDetail.tsx,AnswerEntry.tsx,AnswerHistory.tsx,followups.test.tsx}`、`frontend/src/features/dashboard/{DashboardPage.tsx,api.ts}`；新建 `backend/apps/followups/calendar.py`、`backend/apps/core/dashboard.py`、`backend/tests/{test_calendar,test_dashboard}.py`；修改研究详情与路由。
 
@@ -224,7 +224,7 @@
 - [ ] 运行 `uv run pytest tests/test_calendar.py tests/test_dashboard.py -q`、`pnpm test --run src/features/followups`、类型检查与构建；浏览器实际检查 Calendar、Steps、长表单和表格横向滚动。
 - [ ] 提交本任务文件，提交说明：`功能：完成研究入组访视和后台填写界面`。
 
-### 任务 14：回收记录、审计及虚构演示数据
+### Task 14: 回收记录、审计及虚构演示数据
 
 **文件：** 新建 `backend/apps/core/{audit_api,recycle_api}.py`、`backend/apps/tenants/management/commands/seed_demo.py`、`backend/tests/{test_recycle,test_audit,test_seed_demo}.py`；新建 `frontend/src/features/governance/{AuditPage,RecycleBinPage}.tsx`、`api.ts`；修改路由和各资源的删除恢复服务。
 
@@ -236,7 +236,7 @@
 - [ ] 运行以上测试与前端构建；对照设计逐项检查所有创建、修改、分配、发布、入组、答案修订、完成、停止、删除恢复和导出均留痕。
 - [ ] 提交本任务文件，提交说明：`功能：实现回收审计和演示数据初始化`。
 
-### 任务 15：浏览器闭环验收、部署材料与最终评审
+### Task 15: 浏览器闭环验收、部署材料与最终评审
 
 **文件：** 新建 `frontend/{playwright.config.ts,e2e/health-platform.spec.ts,e2e/isolation.spec.ts}`、`backend/Dockerfile`、`frontend/Dockerfile`、`infra/nginx.conf`、`scripts/{dev.sh,verify.sh}`、`README.md`、`.github/workflows/ci.yml`；修改 `compose.yaml` 与 `.env.example`。
 

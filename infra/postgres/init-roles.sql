@@ -1,0 +1,10 @@
+\getenv owner_password VISPECT_OWNER_PASSWORD
+\getenv app_password VISPECT_APP_PASSWORD
+\getenv control_password VISPECT_CONTROL_PASSWORD
+CREATE ROLE vispect_owner LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB PASSWORD :'owner_password';
+CREATE ROLE vispect_app LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB PASSWORD :'app_password';
+CREATE ROLE vispect_control LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB PASSWORD :'control_password';
+ALTER DATABASE vispect OWNER TO vispect_owner;
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+GRANT USAGE, CREATE ON SCHEMA public TO vispect_owner;
+GRANT USAGE ON SCHEMA public TO vispect_app, vispect_control;
