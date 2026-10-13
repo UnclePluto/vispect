@@ -13,3 +13,5 @@ export const deleteForm=(form:FormRecord)=>api<FormRecord>(`/api/forms/${form.id
 export const getVersions=(id:string)=>api<Page<FormVersion>>(`/api/forms/${id}/versions/`);
 export type VersionOption={id:string;form_id:string;title:string;number:number;paused:boolean};
 export async function getVersionOptions(){const results:VersionOption[]=[];let page=1;while(true){const data=await api<Page<VersionOption>>(`/api/forms/version-options/?page=${page}&page_size=100`);results.push(...data.results);if(results.length>=data.count||!data.results.length)return results;page++}}
+export type FormReferences={studies:{id:string;name:string;state:string}[];pending_visits:number};
+export const getFormReferences=(id:string)=>api<FormReferences>(`/api/forms/${id}/references/`);

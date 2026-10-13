@@ -12,3 +12,9 @@ test('档案编号保留前导零，保存失败保留输入',async()=>{
  await userEvent.type(await screen.findByLabelText('档案编号'),'000001');await userEvent.type(screen.getByLabelText('姓名'),'测试患者');await userEvent.click(screen.getByRole('button',{name:'保 存'}));
  expect(await screen.findByText('患者额度已满')).toBeInTheDocument();expect(screen.getByLabelText('档案编号')).toHaveValue('000001');
 });
+import {fireEvent} from '@testing-library/react';
+test('后端日期字段错误显示在出生日期旁',async()=>{
+ server.use(http.post('*/api/patients/',()=>HttpResponse.json({code:'validation_error',message:'请检查填写内容',fields:{birth_date:['出生日期不能晚于今天']}},{status:400})));
+ render(<QueryClientProvider client={new QueryClient()}><AuthProvider><PatientEditor open onCancel={()=>{}} onSaved={()=>{}}/></AuthProvider></QueryClientProvider>);
+ await userEvent.type(await screen.findByLabelText('档案编号'),'000002');await userEvent.type(screen.getByLabelText('姓名'),'患者');fireEvent.change(screen.getByLabelText('出生日期'),{target:{value:'2999-01-01'}});await userEvent.click(screen.getByRole('button',{name:'保 存'}));expect(await screen.findByText('出生日期不能晚于今天')).toBeInTheDocument();
+});

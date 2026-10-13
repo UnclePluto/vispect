@@ -218,11 +218,11 @@
 
 **接口：** `GET /api/calendar/?study_id=&from=&to=`、`GET /api/dashboard/` 只聚合当前 Actor 可见数据；页面调用任务 10 至 12 API，填写使用任务 8 的 `DynamicForm`，不建立另一套表单引擎。
 
-- [ ] 写 `test_calendar_uses_window_end_and_current_permissions`：`assert overdue['color'] == 'red'; assert pending['color'] == 'yellow'; assert completed['color'] == 'blue'`；上海午夜边界正确，窗口外仍可录入。写 UI 测试：筛选到入组、两种填写对象、必填不足阻止完成、暂停后禁写、保存冲突保留输入；失去权限时清除对应缓存并显示对象不可用。
-- [ ] 运行 `uv run pytest tests/test_calendar.py tests/test_dashboard.py -q` 与 `pnpm test --run src/features/followups/followups.test.tsx`，确认日历、统计及页面缺失时失败。
-- [ ] 实现受试者列表/加入/确认/职责转交、访视详情、完成/停止、日历、代录提示、答案历史与下载。日历支持研究、负责医生和日期筛选以及今天待办列表；研究内容与患者范围分别过滤，工作台不显示不可见患者的统计。前端在 mutation 后失效对应列表缓存，并显示后端字段错误和状态错误。研究答案 Tab 提供可见答案列表及导出，表单目录展示引用研究并在暂停前提示受影响任务。
-- [ ] 运行 `uv run pytest tests/test_calendar.py tests/test_dashboard.py -q`、`pnpm test --run src/features/followups`、类型检查与构建；浏览器实际检查 Calendar、Steps、长表单和表格横向滚动。
-- [ ] 提交本任务文件，提交说明：`功能：完成研究入组访视和后台填写界面`。
+- [x] 写 `test_calendar_uses_window_end_and_current_permissions`：`assert overdue['color'] == 'red'; assert pending['color'] == 'yellow'; assert completed['color'] == 'blue'`；上海午夜边界正确，窗口外仍可录入。写 UI 测试：筛选到入组、两种填写对象、必填不足阻止完成、暂停后禁写、保存冲突保留输入；失去权限时清除对应缓存并显示对象不可用。
+- [x] 运行 `uv run pytest tests/test_calendar.py tests/test_dashboard.py -q` 与 `pnpm test --run src/features/followups/followups.test.tsx`，确认日历、统计及页面缺失时失败。
+- [x] 实现受试者列表/加入/确认/职责转交、访视详情、完成/停止、日历、代录提示、答案历史与下载。日历支持研究、负责医生和日期筛选以及今天待办列表；研究内容与患者范围分别过滤，工作台不显示不可见患者的统计。前端在 mutation 后失效对应列表缓存，并显示后端字段错误和状态错误。研究答案 Tab 提供可见答案列表及导出，表单目录展示引用研究并在暂停前提示受影响任务。
+- [x] 运行 `uv run pytest tests/test_calendar.py tests/test_dashboard.py -q`、`pnpm test --run src/features/followups`、类型检查与构建；浏览器实际检查 Calendar、Steps、长表单和表格横向滚动。
+- [x] 提交本任务文件，提交说明：`功能：完成研究入组访视和后台填写界面`。
 
 ### Task 14: 回收记录、审计及虚构演示数据
 

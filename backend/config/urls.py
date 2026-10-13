@@ -24,3 +24,9 @@ urlpatterns += [path('api/visits/<uuid:visit_id>/answers/',VisitAnswersView.as_v
 
 from apps.followups.api import StudyExportView,AnswerExportView,AnswerRevisionsView
 urlpatterns += [path('api/studies/<uuid:study_id>/export/',StudyExportView.as_view()),path('api/answers/<uuid:answer_id>/export/',AnswerExportView.as_view()),path('api/answers/<uuid:answer_id>/revisions/',AnswerRevisionsView.as_view())]
+
+from apps.followups.calendar import CalendarView
+from apps.core.dashboard import DashboardView
+from apps.followups.api import StudyAnswersView
+from apps.forms.api import FormReferencesView
+urlpatterns += [path('api/calendar/',CalendarView.as_view()),path('api/dashboard/',DashboardView.as_view()),path('api/studies/<uuid:study_id>/answers/',StudyAnswersView.as_view()),path('api/forms/<uuid:form_id>/references/',FormReferencesView.as_view())]

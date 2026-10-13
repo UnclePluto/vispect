@@ -15,3 +15,9 @@ export async function api<T>(path:string,{method='GET',body,idempotencyKey,signa
     return data as T;
 }
 export function errorMessage(error:unknown){return error instanceof Error?error.message:'操作失败，请稍后重试'}
+export async function download(path:string,filename:string){
+ const response=await fetch(new URL(path,window.location.origin),{credentials:'include',headers:{Accept:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}});
+ if(!response.ok){if(response.status===401)window.dispatchEvent(new window.CustomEvent('vispect:session-expired'));throw new ApiError(await response.json(),response.status)}
+ const url=URL.createObjectURL(await response.blob()),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+export function objectUnavailable(error:unknown){return error instanceof ApiError&&[403,404].includes(error.status)}

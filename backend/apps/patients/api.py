@@ -24,7 +24,12 @@ class PatientsView(APIView):
         return Response(patient_payload(create_patient(actor,data.validated_data)),status=201)
 
 class PatientDetailView(APIView):
-    def get(self,request,patient_id):return Response(patient_payload(get_object(visible_patients(current_actor(request)),patient_id)))
+    def get(self,request,patient_id):
+        actor=current_actor(request);patient=get_object(visible_patients(actor),patient_id);data=patient_payload(patient)
+        from apps.followups.selectors import visible_enrollments
+        from apps.followups.serializers import enrollment_payload
+        data['enrollments']=[enrollment_payload(e) for e in visible_enrollments(actor).filter(patient=patient).select_related('study','patient','doctor')]
+        return Response(data)
     def patch(self,request,patient_id):
         data=PatientWriteSerializer(data={k:v for k,v in request.data.items() if k!='expected_revision'},partial=True);data.is_valid(raise_exception=True)
         return Response(patient_payload(update_patient(current_actor(request),patient_id,data.validated_data,edit_revision(request))))

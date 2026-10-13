@@ -102,3 +102,10 @@ class AnswerExportView(APIView):
         response['Content-Disposition']='attachment; filename="answer.xlsx"';response['Cache-Control']='no-store';return response
 class AnswerRevisionsView(APIView):
     def get(self,request,answer_id):return Response(paginate(visible_answer_revisions(current_actor(request),answer_id),request,revision_payload))
+
+class StudyAnswersView(APIView):
+    def get(self,request,study_id):
+        actor=current_actor(request);require_study_member(actor,study_id)
+        query=visible_answers(actor).filter(visit__study_id=study_id).select_related('recorded_by','form_version','visit__stage','visit__enrollment__patient')
+        def payload(a):return {**answer_payload(a),'patient_name':a.visit.enrollment.patient.name,'patient_code':a.visit.enrollment.patient.code,'stage_name':a.visit.stage.name,'form_title':a.form_version.definition['title'],'version_number':a.form_version.number}
+        return Response(paginate(query,request,payload))

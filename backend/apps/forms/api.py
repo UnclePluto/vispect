@@ -55,3 +55,12 @@ class PublishedVersionOptionsView(APIView):
         actor=current_actor(request);require_tenant(actor)
         query=FormVersion.objects.filter(tenant_id=actor.tenant_id,form__deleted_at__isnull=True).select_related('form').order_by('form_id','-number')
         return Response(paginate(query,request,lambda v:{'id':str(v.id),'form_id':str(v.form_id),'title':v.definition['title'],'number':v.number,'paused':v.form.paused}))
+
+class FormReferencesView(APIView):
+    def get(self,request,form_id):
+        from apps.studies.selectors import visible_studies
+        from apps.followups.selectors import visible_visits
+        actor=current_actor(request);form=get_object(visible_forms(actor),form_id)
+        studies=visible_studies(actor).filter(stages__bindings__form_version__form=form).distinct()
+        pending=visible_visits(actor).filter(status='pending',stage__bindings__form_version__form=form).distinct().count()
+        return Response({'studies':[{'id':str(s.id),'name':s.name,'state':s.state} for s in studies],'pending_visits':pending})
