@@ -122,11 +122,11 @@
 
 **接口：** 消费任务 2、3 的事务、RLS、配额、审计与任务 4 的医生服务。提供 `visible_patients(actor) -> QuerySet[Patient]`、`create_patient(actor, data: dict) -> Patient`、`update_patient(actor, patient_id: UUID, data: dict, expected_revision: int) -> Patient`、`delete_patient(actor, patient_id: UUID, expected_revision: int) -> Patient`、`restore_patient(actor, patient_id: UUID, expected_revision: int) -> Patient`、`assign_doctors(actor, patient_id: UUID, doctor_ids: list[UUID], expected_revision: int) -> Patient`；`/api/patients/` 与 `/assign-doctors/`。提供 `TestWorld.patient(tenant, **data) -> Patient`。
 
-- [ ] 写 `test_doctor_sees_only_assigned_patients`：两医生各自建档，`assert set(visible_patients(actor_a)) == {patient_a}`，另一个患者详情返回 404；写 `test_responsibility_change_revokes_access`：移除负责关系后 `assert old_client.get(detail_url).status_code == 404`；编号 `000001` 保持字符串，同手机号可建两份档案，跨租户负责医生不能绑定，患者恢复要重新检查配额。
-- [ ] 运行 `uv run pytest tests/test_patients.py -q` 和 `pnpm test --run src/features/patients/patients.test.tsx`，确认未过滤的列表或缺失接口导致失败。
-- [ ] 实现患者与多负责医生、复合外键、配额触发器和权限过滤；只有管理员能分配负责关系，医生创建时自动负责。医生删除前保护尚未转交的患者关系。UI 完成搜索分页、编辑、详情和负责医生分配。
-- [ ] 运行以上测试、类型检查和构建；管理员可查看本租户全部患者，医生搜索、分页数量与详情使用同一可见范围。
-- [ ] 提交本任务文件，提交说明：`功能：实现患者档案和医生负责关系`。
+- [x] 写 `test_doctor_sees_only_assigned_patients`：两医生各自建档，`assert set(visible_patients(actor_a)) == {patient_a}`，另一个患者详情返回 404；写 `test_responsibility_change_revokes_access`：移除负责关系后 `assert old_client.get(detail_url).status_code == 404`；编号 `000001` 保持字符串，同手机号可建两份档案，跨租户负责医生不能绑定，患者恢复要重新检查配额。
+- [x] 运行 `uv run pytest tests/test_patients.py -q` 和 `pnpm test --run src/features/patients/patients.test.tsx`，确认未过滤的列表或缺失接口导致失败。
+- [x] 实现患者与多负责医生、复合外键、配额触发器和权限过滤；只有管理员能分配负责关系，医生创建时自动负责。医生删除前保护尚未转交的患者关系。UI 完成搜索分页、编辑、详情和负责医生分配。
+- [x] 运行以上测试、类型检查和构建；管理员可查看本租户全部患者，医生搜索、分页数量与详情使用同一可见范围。
+- [x] 提交本任务文件，提交说明：`功能：实现患者档案和医生负责关系`。
 
 ### Task 6: 跨语言动态表单规则协议
 

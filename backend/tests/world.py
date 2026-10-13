@@ -74,3 +74,7 @@ class TestWorld:
         doctor=create_doctor(self.actor(tenant,'tenant_admin'),{'username':f'doctor-{uuid.uuid4().hex[:8]}','name':'新增测试医生','password':self.password,**data})
         doctor.account.must_change_password=False;self.owner_save(doctor.account)
         return doctor
+
+    def patient(self,tenant,**data):
+        from apps.patients.services import create_patient
+        return create_patient(self.actor(tenant,'tenant_admin'),{'code':uuid.uuid4().hex[:10],'name':'测试患者','doctor_ids':[self.accounts[tenant,'doctor'].doctor_id],**data})

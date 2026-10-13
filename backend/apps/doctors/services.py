@@ -60,6 +60,9 @@ def delete_doctor(actor,doctor_id,expected_revision):
     require_tenant(actor);require_role(actor,'tenant_admin')
     def mutation():
         doctor=get_object(visible_doctors(actor),doctor_id,True);ensure_revision(doctor,expected_revision)
+        from apps.patients.models import PatientDoctor
+        if PatientDoctor.objects.filter(doctor=doctor,patient__deleted_at__isnull=True).exists():
+            raise ApiError('doctor_has_patients','请先转交该医生负责的患者')
         doctor.deleted_at=timezone.now();doctor.revision+=1;doctor.save()
         account=doctor.account;account.is_active=False;account.revision+=1;account.save()
         audit(actor,'delete','doctor',doctor.id,{'name':doctor.name})

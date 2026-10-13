@@ -1,0 +1,5 @@
+import {Alert,Descriptions,Drawer,Spin} from 'antd';
+import {useQuery} from '@tanstack/react-query';
+import {errorMessage} from '../../api/client';
+import {getPatient} from './api';
+export function PatientDetail({id,onClose}:{id:string|null;onClose:()=>void}){const q=useQuery({queryKey:['patient',id],queryFn:()=>getPatient(id!),enabled:!!id,refetchOnWindowFocus:'always'});const p=q.isError?undefined:q.data;return <Drawer title="患者详情" open={!!id} onClose={onClose} size="large">{q.isLoading&&<Spin/>}{q.error&&<Alert type="error" title={errorMessage(q.error)}/>} {p&&<Descriptions column={1} bordered items={[{key:'code',label:'档案编号',children:p.code},{key:'name',label:'姓名',children:p.name},{key:'gender',label:'性别',children:({male:'男',female:'女',other:'其他',unknown:'未知'} as Record<string,string>)[p.gender]},{key:'birth',label:'出生日期 / 年龄',children:`${p.birth_date??'未填写'} / ${p.age??'—'}`},{key:'phone',label:'联系方式',children:p.phone||'—'},{key:'doctors',label:'负责医生',children:p.doctors.map(d=>d.name).join('、')},{key:'notes',label:'备注',children:p.notes||'—'}]}/>}</Drawer>}

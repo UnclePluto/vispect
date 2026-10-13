@@ -1,0 +1,10 @@
+import {api} from '../../api/client';
+import type {Page,Revision} from '../../api/types';
+export type Patient=Revision&{code:string;name:string;gender:string;birth_date:string|null;age:number|null;phone:string;notes:string;status:string;doctors:{id:string;name:string}[];deleted_at:string|null};
+export type PatientValues={code:string;name:string;gender?:string;birth_date?:string|null;phone?:string;notes?:string;status?:string;doctor_ids?:string[]};
+export const getPatients=(page:number,search:string,status?:string,doctor?:string)=>api<Page<Patient>>(`/api/patients/?${new URLSearchParams({page:String(page),search,...(status?{status}:{}),...(doctor?{doctor_id:doctor}:{})})}`);
+export const getPatient=(id:string)=>api<Patient>(`/api/patients/${id}/`);
+export const createPatient=(body:PatientValues)=>api<Patient>('/api/patients/',{method:'POST',body});
+export const updatePatient=(p:Patient,body:PatientValues)=>api<Patient>(`/api/patients/${p.id}/`,{method:'PATCH',body:{...body,expected_revision:p.revision}});
+export const deletePatient=(p:Patient)=>api<Patient>(`/api/patients/${p.id}/`,{method:'DELETE',body:{expected_revision:p.revision}});
+export const assignDoctors=(p:Patient,doctor_ids:string[])=>api<Patient>(`/api/patients/${p.id}/assign-doctors/`,{method:'POST',body:{doctor_ids,expected_revision:p.revision}});
