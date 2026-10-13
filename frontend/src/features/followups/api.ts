@@ -16,7 +16,7 @@ export const stopFollowup=(id:string,stop_type:string,reason:string,key:string)=
 export const getVisit=(id:string)=>api<Visit>(`/api/visits/${id}/`);
 export const getVisitAnswers=(id:string)=>api<{results:Answer[]}>(`/api/visits/${id}/answers/`);
 export const saveDraftAnswer=(visit:string,binding:string,answers:Record<string,JSONValue>,expected_revision:number)=>api<Answer>(`/api/visits/${visit}/answers/`,{method:'POST',body:{binding_id:binding,answers,expected_revision,action:'draft'}});
-export const submitAnswer=(visit:string,binding:string,answers:Record<string,JSONValue>,key:string)=>api<Answer>(`/api/visits/${visit}/answers/`,{method:'POST',body:{binding_id:binding,answers,action:'submit'},idempotencyKey:key});
+export const submitAnswer=(visit:string,binding:string,answers:Record<string,JSONValue>,key:string,expected_revision:number)=>api<Answer>(`/api/visits/${visit}/answers/`,{method:'POST',body:{binding_id:binding,answers,action:'submit',expected_revision},idempotencyKey:key});
 export const reviseAnswer=(answer:string,answers:Record<string,JSONValue>,reason:string,expected_revision:number)=>api<Answer>(`/api/answers/${answer}/revise/`,{method:'POST',body:{answers,reason,expected_revision}});
 export const completeVisit=(visit:string,key:string)=>api<Visit>(`/api/visits/${visit}/complete/`,{method:'POST',body:{},idempotencyKey:key});
 export const getHistory=(answer:string,page=1)=>api<Page<History>>(`/api/answers/${answer}/revisions/?page=${page}`);

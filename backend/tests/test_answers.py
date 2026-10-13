@@ -8,7 +8,7 @@ def test_submission_retry_does_not_overwrite_answer(world):
     from apps.followups.answers import submit_answer,save_answer_draft
     e,v,b=world.entry('a');a=world.actor('a','doctor')
     draft=save_answer_draft(a,v.id,b.id,{'q1':'草稿'},0)
-    first=submit_answer(a,v.id,b.id,{'q1':'提交'},'submit');second=submit_answer(a,v.id,b.id,{'q1':'提交'},'submit')
+    first=submit_answer(a,v.id,b.id,{'q1':'提交'},'submit',draft.revision);second=submit_answer(a,v.id,b.id,{'q1':'提交'},'submit',draft.revision)
     assert first.id==second.id==draft.id and second.answers==first.answers=={'q1':'提交'}
     assert first.is_proxy and first.respondent=='patient' and first.recorded_by_id==a.account_id
     with pytest.raises(ApiError):submit_answer(a,v.id,b.id,{'q1':'覆盖'},'new-key')
@@ -75,3 +75,23 @@ def test_answer_version_and_immutable_history_database_constraints(world):
     with psycopg.connect(world.app_dsn) as conn:
         conn.execute("SELECT set_config('vispect.tenant_id',%s,true)",[str(a.tenant_id)])
         with pytest.raises(psycopg.errors.InsufficientPrivilege):conn.execute("UPDATE followups_answerrevision SET reason='篡改' WHERE answer_id=%s",[answer.id])
+
+@pytest.mark.parametrize('expected_revision',[0,1])
+def test_stale_submit_cannot_overwrite_saved_draft(world,expected_revision):
+    from apps.followups.answers import save_answer_draft
+    from apps.followups.models import Answer
+    e,v,b=world.entry('a');a=world.actor('a','doctor')
+    draft=save_answer_draft(a,v.id,b.id,{'q1':'第一次保存'},0)
+    draft=save_answer_draft(a,v.id,b.id,{'q1':'其他工作人员最新保存'},draft.revision)
+    client=world.login('a','doctor')
+    response=world.post(client,f'/api/visits/{v.id}/answers/',{'binding_id':str(b.id),'answers':{'q1':'旧页面提交'},'action':'submit','expected_revision':expected_revision},HTTP_IDEMPOTENCY_KEY='stale-submit')
+    assert response.status_code==409
+    assert response.json()['code']=='revision_conflict'
+    with tenant_transaction(a.tenant_id):
+        saved=Answer.objects.get(id=draft.id)
+        assert saved.answers=={'q1':'其他工作人员最新保存'} and saved.status=='draft' and saved.revision==2
+
+def test_submit_requires_explicit_edit_revision(world):
+    e,v,b=world.entry('a');client=world.login('a','doctor')
+    response=world.post(client,f'/api/visits/{v.id}/answers/',{'binding_id':str(b.id),'answers':{'q1':'提交'},'action':'submit'},HTTP_IDEMPOTENCY_KEY='missing-revision')
+    assert response.status_code==400

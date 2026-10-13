@@ -67,7 +67,7 @@ class AnswerWriteSerializer(serializers.Serializer):
     binding_id=serializers.UUIDField()
     answers=serializers.JSONField()
     action=serializers.ChoiceField(choices=['draft','submit'])
-    expected_revision=serializers.IntegerField(required=False,min_value=0)
+    expected_revision=serializers.IntegerField(min_value=0)
 class VisitAnswersView(APIView):
     def get(self,request,visit_id):
         actor=current_actor(request);get_object(visible_visits(actor),visit_id)
@@ -77,7 +77,7 @@ class VisitAnswersView(APIView):
         if values['action']=='draft':
             if 'expected_revision' not in values:raise serializers.ValidationError({'expected_revision':['请提供答案修订号']})
             answer=save_answer_draft(actor,visit_id,values['binding_id'],values['answers'],values['expected_revision'])
-        else:answer=submit_answer(actor,visit_id,values['binding_id'],values['answers'],request.headers.get('Idempotency-Key',''))
+        else:answer=submit_answer(actor,visit_id,values['binding_id'],values['answers'],request.headers.get('Idempotency-Key',''),values['expected_revision'])
         return Response(answer_payload(answer))
 class AnswerDetailView(APIView):
     def get(self,request,answer_id):return Response(answer_payload(get_object(visible_answers(current_actor(request)),answer_id)))

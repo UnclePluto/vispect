@@ -51,17 +51,19 @@ def save_answer_draft(actor,visit_id,binding_id,answers,expected_revision):
         audit(actor,'save_draft','answer',answer.id,{'visit_id':str(visit.id),'binding_id':str(binding.id)});return answer
     return mutate_with_quota(actor,'studies',mutation,delta=0)
 
-def submit_answer(actor,visit_id,binding_id,answers,key):
+def submit_answer(actor,visit_id,binding_id,answers,key,expected_revision=0):
     require_tenant(actor)
     def operation():
         visit,e,study=locked_visit(actor,visit_id);require_writable(visit,e,study);binding=writable_binding(actor,visit,binding_id)
         def mutation():
             clean=evaluated(binding,answers,'submit');answer=Answer.objects.select_for_update().filter(visit=visit,binding=binding).first()
+            if answer:ensure_revision(answer,expected_revision)
+            elif expected_revision!=0:raise ApiError('revision_conflict','答案草稿已变化，请刷新后重试')
             if answer and answer.status=='submitted':raise ApiError('answer_submitted','已提交答案不能覆盖，请填写修订原因')
             if answer:answer.answers=clean;answer.recorded_by_id=actor.account_id;answer.revision+=1
             else:answer=Answer(**answer_values(actor,visit,binding,clean))
             answer.status='submitted';answer.submitted_at=timezone.now();answer.save();audit(actor,'submit','answer',answer.id,{'visit_id':str(visit.id),'binding_id':str(binding.id),'is_proxy':answer.is_proxy});return {'id':str(answer.id)}
-        result=run_idempotent(actor,key,'submit_answer',{'visit_id':str(visit_id),'binding_id':str(binding_id),'answers':answers},mutation)
+        result=run_idempotent(actor,key,'submit_answer',{'visit_id':str(visit_id),'binding_id':str(binding_id),'answers':answers,'expected_revision':expected_revision},mutation)
         return get_object(visible_answers(actor),result['id'])
     return mutate_with_quota(actor,'studies',operation,delta=0)
 
