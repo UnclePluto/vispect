@@ -206,11 +206,11 @@
 
 **接口：** `export_answers(actor, study_id: UUID | None = None, answer_id: UUID | None = None) -> bytes`；`visible_answer_revisions(actor, answer_id) -> QuerySet[AnswerRevision]`；API `/api/studies/{id}/export/`、`/api/answers/{id}/export/`、`/revisions/`。导出只允许指定一份答案或一个研究，使用同一套可见范围。
 
-- [ ] 写 `test_doctor_export_excludes_other_patients` 和职责撤销后旧回执/旧下载请求拒绝的测试；将 `=SUM(1,2)` 等值读回，断言 `cell.data_type == 's'`；空研究仍有合法工作表，重复长标题断言表名唯一且长度不超过 31；两个版本分表、零值与空值不混淆。
-- [ ] 运行 `uv run pytest tests/test_exports.py -q`，确认导出和修订查看缺失导致失败。
-- [ ] 用 openpyxl 生成按版本分表的工作簿，固定信息列为档案编号、入组编号、访视、填写对象、录入人、提交时间，再按版本题目顺序写答案。选项显示原版本文案，多选按原顺序合并。所有用户文本按字符串写入，查询和文件生成在授权事务内完成，记录导出审计，不返回持久公开链接。
-- [ ] 运行以上测试，重新读取工作簿校验单元格类型、编号和表名；访问答案历史时仍执行当前医生数据权限。
-- [ ] 提交本任务文件，提交说明：`功能：实现研究答案导出和修订记录查看`。
+- [x] 写 `test_doctor_export_excludes_other_patients` 和职责撤销后旧回执/旧下载请求拒绝的测试；将 `=SUM(1,2)` 等值读回，断言 `cell.data_type == 's'`；空研究仍有合法工作表，重复长标题断言表名唯一且长度不超过 31；两个版本分表、零值与空值不混淆。
+- [x] 运行 `uv run pytest tests/test_exports.py -q`，确认导出和修订查看缺失导致失败。
+- [x] 用 openpyxl 生成按版本分表的工作簿，固定信息列为档案编号、入组编号、访视、填写对象、录入人、提交时间，再按版本题目顺序写答案。选项显示原版本文案，多选按原顺序合并。所有用户文本按字符串写入，查询和文件生成在授权事务内完成，记录导出审计，不返回持久公开链接。
+- [x] 运行以上测试，重新读取工作簿校验单元格类型、编号和表名；访问答案历史时仍执行当前医生数据权限。
+- [x] 提交本任务文件，提交说明：`功能：实现研究答案导出和修订记录查看`。
 
 ### Task 13: 研究操作、访视日历与后台填写页面
 

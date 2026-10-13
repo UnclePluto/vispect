@@ -21,3 +21,6 @@ urlpatterns += [path('api/studies/<uuid:study_id>/subjects/',StudySubjectsView.a
 
 from apps.followups.api import VisitAnswersView,AnswerDetailView,AnswerReviseView,VisitCompleteView,EnrollmentStopView
 urlpatterns += [path('api/visits/<uuid:visit_id>/answers/',VisitAnswersView.as_view()),path('api/visits/<uuid:visit_id>/complete/',VisitCompleteView.as_view()),path('api/answers/<uuid:answer_id>/',AnswerDetailView.as_view()),path('api/answers/<uuid:answer_id>/revise/',AnswerReviseView.as_view()),path('api/enrollments/<uuid:enrollment_id>/stop/',EnrollmentStopView.as_view())]
+
+from apps.followups.api import StudyExportView,AnswerExportView,AnswerRevisionsView
+urlpatterns += [path('api/studies/<uuid:study_id>/export/',StudyExportView.as_view()),path('api/answers/<uuid:answer_id>/export/',AnswerExportView.as_view()),path('api/answers/<uuid:answer_id>/revisions/',AnswerRevisionsView.as_view())]

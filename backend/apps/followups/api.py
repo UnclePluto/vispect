@@ -88,3 +88,17 @@ class VisitCompleteView(APIView):
     def post(self,request,visit_id):return Response(visit_payload(complete_visit(current_actor(request),visit_id,request.headers.get('Idempotency-Key',''))))
 class EnrollmentStopView(APIView):
     def post(self,request,enrollment_id):return Response(enrollment_payload(stop_followup(current_actor(request),enrollment_id,request.data.get('stop_type'),request.data.get('reason'),request.headers.get('Idempotency-Key',''))))
+
+from django.http import HttpResponse
+from .exports import export_answers
+from .history import visible_answer_revisions,revision_payload
+class StudyExportView(APIView):
+    def get(self,request,study_id):
+        response=HttpResponse(export_answers(current_actor(request),study_id=study_id),content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition']='attachment; filename="study-answers.xlsx"';response['Cache-Control']='no-store';return response
+class AnswerExportView(APIView):
+    def get(self,request,answer_id):
+        response=HttpResponse(export_answers(current_actor(request),answer_id=answer_id),content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition']='attachment; filename="answer.xlsx"';response['Cache-Control']='no-store';return response
+class AnswerRevisionsView(APIView):
+    def get(self,request,answer_id):return Response(paginate(visible_answer_revisions(current_actor(request),answer_id),request,revision_payload))
