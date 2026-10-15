@@ -15,3 +15,9 @@ class ActorPermission(BasePermission):
     def has_permission(self,request,view):
         current_actor(request)
         return True
+
+class PrincipalPermission(BasePermission):
+    def has_permission(self,request,view):
+        from apps.accounts.principal import get_principal
+        get_principal(request)
+        return True

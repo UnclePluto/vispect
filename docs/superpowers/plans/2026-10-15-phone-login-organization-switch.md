@@ -98,11 +98,11 @@
 
 **接口：** `authenticate_phone(phone, password) -> LoginIdentity`；`start_login(request, identity) -> AuthEnvelope`；`get_principal(request) -> Principal`；`auth_envelope(request) -> AuthEnvelope`；`change_identity_password(request, old_password, new_password) -> AuthEnvelope`。LoginSessionContext 的稳定 id 不随 Django session key 轮换改变；有效期沿用 Django SESSION_COOKIE_AGE。
 
-- [ ] 写 `test_login_next_state`、`test_phone_login_requires_csrf` 和 `test_invalid_credentials_do_not_reveal_memberships`：正确手机号免机构登录；未知手机／错误密码统一 401 且消息为“手机号或密码不正确”；无 CSRF 登录 403；一个空间 next=ready，多个 next=choose_workspace，零个 next=no_workspace；首次改密优先 next=change_password、actor=null。
-- [ ] 写 `test_identity_password_revokes_other_sessions`、`test_global_deactivation` 及 `test_workspace_roles_do_not_union`：A 管理员＋B 医生不产生权限并集；本人改密仅保留当前上下文登录，其他会话 401；重复初始密码不接受；全局停用与过期上下文拒绝。me 返回本人 AuthEnvelope，未选空间业务接口返回 workspace_required（403）。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_auth.py -q`，预期新入口或新状态尚未实现而失败。
-- [ ] 实现统一凭据读取、Django session 轮换、上下文建立和 PrincipalPermission；world 默认工厂改为先建立 identity 再保存绑定 Account，以满足最终新成员约束；历史空身份样例只通过受控 migration 测试工厂建立。不得对登录手机号存在性使用不同错误消息。修改现有 auth API 响应与测试，world 为默认账号绑定明确手机号，新增 `phone_for(tenant, role)`；旧测试仍检查原安全意图，不靠删除权限断言通过。尚未使用新前端的旧入口仅作过渡，登记任务 9 的移除点。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_auth.py backend/tests/test_auth.py -q`，预期全部通过。提交：`认证：实现手机号登录和统一密码会话`。
+- [x] 写 `test_login_next_state`、`test_phone_login_requires_csrf` 和 `test_invalid_credentials_do_not_reveal_memberships`：正确手机号免机构登录；未知手机／错误密码统一 401 且消息为“手机号或密码不正确”；无 CSRF 登录 403；一个空间 next=ready，多个 next=choose_workspace，零个 next=no_workspace；首次改密优先 next=change_password、actor=null。
+- [x] 写 `test_identity_password_revokes_other_sessions`、`test_global_deactivation` 及 `test_workspace_roles_do_not_union`：A 管理员＋B 医生不产生权限并集；本人改密仅保留当前上下文登录，其他会话 401；重复初始密码不接受；全局停用与过期上下文拒绝。me 返回本人 AuthEnvelope，未选空间业务接口返回 workspace_required（403）。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_auth.py -q`，预期新入口或新状态尚未实现而失败。
+- [x] 实现统一凭据读取、Django session 轮换、上下文建立和 PrincipalPermission；world 默认工厂改为先建立 identity 再保存绑定 Account，以满足最终新成员约束；历史空身份样例只通过受控 migration 测试工厂建立。不得对登录手机号存在性使用不同错误消息。修改现有 auth API 响应与测试，world 为默认账号绑定明确手机号，新增 `phone_for(tenant, role)`；旧测试仍检查原安全意图，不靠删除权限断言通过。尚未使用新前端的旧入口仅作过渡，登记任务 9 的移除点。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_auth.py backend/tests/test_auth.py -q`，预期全部通过。提交：`认证：实现手机号登录和统一密码会话`。
 
 ### Task 4: 空间切换、请求令牌与数据库屏障
 

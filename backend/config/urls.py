@@ -34,3 +34,6 @@ urlpatterns += [path('api/calendar/',CalendarView.as_view()),path('api/dashboard
 from apps.core.audit_api import AuditView
 from apps.core.recycle_api import RecycleView
 urlpatterns += [path('api/audit/',AuditView.as_view()),path('api/platform/audit/',AuditView.as_view(platform=True)),path('api/recycle/',RecycleView.as_view())]
+
+from apps.accounts.auth_api import PhoneLoginView,WorkspacesView
+urlpatterns += [path('api/auth/login/',PhoneLoginView.as_view()),path('api/auth/workspaces/',WorkspacesView.as_view())]

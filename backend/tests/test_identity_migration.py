@@ -2,6 +2,8 @@ import pytest
 from apps.core.context import tenant_transaction
 from apps.core.errors import ApiError
 
+pytestmark=pytest.mark.parametrize('world',[False],indirect=True)
+
 def groups_for(world):
     return [{'phone':'13800000001','primary_account_id':str(world.accounts['a','tenant_admin'].id),'account_ids':[str(world.accounts['a','tenant_admin'].id),str(world.accounts['b','doctor'].id)],'enabled':True}]
 

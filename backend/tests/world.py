@@ -12,7 +12,7 @@ from apps.core.types import Actor
 class TestWorld:
     __test__=False
     password='World-Strong-Password-2026!'
-    def __init__(self):
+    def __init__(self,create_identities=True):
         self.app_dsn=os.environ['DATABASE_URL']
         self.control_dsn=os.environ['CONTROL_DATABASE_URL']
         self.tenants={slug:Tenant.objects.using('migration').create(slug=slug,name=f'测试机构 {slug}') for slug in ['a','b']}
@@ -23,14 +23,17 @@ class TestWorld:
             for role,username in [('tenant_admin','admin'),('doctor','doctor')]:
                 account=Account(tenant=self.tenants[slug],username=username,name=f'测试{username}',role=role)
                 account.set_password(self.password)
-                self.owner_save(account)
+                if create_identities:self.bind_identity(account,self.phone_for(slug,role))
+                else:self.owner_save(account)
                 if role=='doctor':
                     from apps.doctors.models import Doctor
                     doctor=Doctor(tenant=self.tenants[slug],account=account,name=account.name)
                     self.owner_save(doctor);account.doctor_id=doctor.id;self.owner_save(account)
                 self.accounts[slug,role]=account
         account=Account(username='platform',name='平台管理员',role='platform_admin')
-        account.set_password(self.password);self.owner_save(account)
+        account.set_password(self.password)
+        if create_identities:self.bind_identity(account,self.phone_for(None,'platform_admin'))
+        else:self.owner_save(account)
         self.accounts[None,'platform_admin']=account
 
     def owner_save(self,instance):
@@ -110,6 +113,12 @@ class TestWorld:
         identity=LoginIdentity.objects.using('migration').filter(phone=normalize_phone(phone)).first()
         if identity is None:
             identity=LoginIdentity(phone=normalize_phone(phone),name=account.name,must_change_password=False)
-            identity.set_password(password or self.password);identity.save(using='migration')
+            if password is None and account.has_usable_password():identity.password=account.password
+            else:identity.set_password(password or self.password)
+            identity.save(using='migration')
         account.identity=identity;self.owner_save(account)
         return identity
+
+    def phone_for(self,tenant,role):
+        keys=[('a','tenant_admin'),('a','doctor'),('b','tenant_admin'),('b','doctor'),(None,'platform_admin')]
+        return f'139000020{keys.index((tenant,role))+1:02d}'

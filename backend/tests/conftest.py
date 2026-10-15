@@ -35,13 +35,13 @@ def runtime_database(django_db_blocker,prepare_test_database):
         yield
 
 @pytest.fixture
-def world(runtime_database):
+def world(runtime_database,request):
     from django.db import connections
     from tests.world import TestWorld
     connections.close_all()
     with psycopg.connect(os.environ['MIGRATION_DATABASE_URL'],autocommit=True) as conn:
         tables=[r[0] for r in conn.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'") if r[0]=='django_session' or r[0].startswith(('tenants_','accounts_','core_','doctors_','patients_','forms_','studies_','followups_'))]
         if tables:conn.execute(sql.SQL('TRUNCATE {} CASCADE').format(sql.SQL(',').join(map(sql.Identifier,tables))))
-    result=TestWorld()
+    result=TestWorld(create_identities=getattr(request,'param',True))
     yield result
     connections.close_all()

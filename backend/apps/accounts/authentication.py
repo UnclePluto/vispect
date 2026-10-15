@@ -12,6 +12,7 @@ class SessionActorAuthentication(BaseAuthentication):
         actor=getattr(request._request,'actor',None)
         if actor:
             return request._request.account,actor
+        if getattr(request._request,'principal',None):return request._request.login_identity,request._request.principal
         return None
 
     def authenticate_header(self,request):

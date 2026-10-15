@@ -37,18 +37,30 @@ class PlatformLoginView(APIView):
             return Response(identity_payload(account))
 
 class MeView(APIView):
+    permission_classes=[AllowAny]
     def get(self,request):
+        if getattr(request,'principal',None):
+            from .session_context import auth_envelope
+            return Response(auth_envelope(request._request))
         current_actor(request)
         return Response(identity_payload(request._request.account))
 
 class LogoutView(APIView):
     permission_classes=[AllowAny]
     def post(self,request):
+        if getattr(request,'principal',None):
+            from .models import LoginSessionContext
+            LoginSessionContext.objects.using('control').filter(id=request.principal.context_id).update(revoked=True)
         request.session.flush()
         return Response({'success':True})
 
 class ChangePasswordView(APIView):
+    permission_classes=[AllowAny]
     def post(self,request):
         data=ChangePasswordSerializer(data=request.data);data.is_valid(raise_exception=True)
+        if getattr(request,'principal',None):
+            from .session_context import change_identity_password
+            return Response(change_identity_password(request._request,**data.validated_data))
+        current_actor(request)
         account=change_password(request,**data.validated_data)
         return Response(identity_payload(account))

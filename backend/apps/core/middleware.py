@@ -14,6 +14,8 @@ class TenantContextMiddleware:
 
     def __call__(self,request):
         request.actor=None
+        if request.session.get('principal'):
+            return self.unified_response(request)
         identity=request.session.get('identity')
         if not identity:
             return self.get_response(request)
@@ -46,3 +48,27 @@ class TenantContextMiddleware:
         if account.must_change_password and request.method not in ['GET','HEAD','OPTIONS'] and request.path not in ['/api/auth/change-password/','/api/auth/logout/']:
             raise ApiError('password_change_required','请先修改初始密码',status=403)
         return self.get_response(request)
+
+    def unified_response(self,request):
+        from apps.accounts.principal import load_principal
+        from apps.accounts.session_context import current_workspace
+        try:
+            load_principal(request)
+            if request.path.startswith('/api/auth/') or request.path=='/api/health/':return self.get_response(request)
+            if request.login_identity.must_change_password:raise ApiError('password_change_required','请先修改初始密码',status=403)
+            had_workspace=bool(request.login_context.active_account_id)
+            workspace=current_workspace(request)
+            if not workspace:raise ApiError('workspace_unavailable' if had_workspace else 'workspace_required','请先选择可用机构',status=409 if had_workspace else 403)
+            tenant=workspace['tenant'];alias='default' if tenant else 'control'
+            scope=tenant_transaction(tenant['id']) if tenant else transaction.atomic(using='control')
+            with scope:
+                account=Account.objects.using(alias).filter(id=workspace['account_id'],identity_id=request.login_identity.id,is_active=True).first()
+                if not account:raise ApiError('workspace_unavailable','当前机构身份不可用，请重新选择',status=409)
+                request.account=account;request.actor=Actor(account.id,account.tenant_id,account.role,account.doctor_id)
+                return self.get_response(request)
+        except (ApiError,ValueError,KeyError) as exc:
+            if not isinstance(exc,ApiError):exc=ApiError('session_unavailable','登录已失效，请重新登录',status=401)
+            if exc.status==401:
+                request.session.flush()
+                if request.path in ['/api/auth/login/','/api/auth/csrf/','/api/auth/logout/']:return self.get_response(request)
+            return JsonResponse({'code':exc.code,'message':exc.message,'fields':exc.fields},status=exc.status)
