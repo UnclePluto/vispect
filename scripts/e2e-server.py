@@ -19,4 +19,8 @@ with psycopg.connect(os.environ['MIGRATION_DATABASE_URL'],autocommit=True) as co
     tables=[r[0] for r in conn.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'") if r[0]=='django_session' or r[0].startswith(('tenants_','accounts_','core_','doctors_','patients_','forms_','studies_','followups_'))]
     if tables:conn.execute(sql.SQL('TRUNCATE {} CASCADE').format(sql.SQL(',').join(map(sql.Identifier,tables))))
 call_command('seed_demo',verbosity=0)
+from django.db import connections
+connections['migration'].close();del connections['migration'];del connections.databases['migration']
+for key in ['MIGRATION_DATABASE_URL','VISPECT_OWNER_PASSWORD','VISPECT_MANAGEMENT','POSTGRES_PASSWORD','DEMO_PASSWORD']:
+    os.environ.pop(key,None)
 execute_from_command_line(['manage.py','runserver','127.0.0.1:8001','--noreload'])

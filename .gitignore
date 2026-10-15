@@ -13,3 +13,5 @@ test-results/
 .superpowers/sdd/
 .playwright-cli/
 output/playwright/
+
+.local/

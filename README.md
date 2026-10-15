@@ -1,6 +1,6 @@
-# Vispect 多租户健康管理平台
+# Vispect 多机构健康管理平台
 
-Django 5.2 / DRF、PostgreSQL 17、React / TypeScript / Ant Design 6。首版支持医生和患者档案、研究成员与访视配置、动态表单、筛选与入组、工作人员代录、答案修订、顺序访视、停止随访、Excel 导出、租户额度、回收记录和审计。
+Django 5.2 / DRF、PostgreSQL 17、React / TypeScript / Ant Design 6。首版支持医生和患者档案、研究成员与访视配置、动态表单、筛选与入组、工作人员代录、答案修订、顺序访视、停止随访、Excel 导出、机构额度、回收记录和审计。
 
 ## 本地启动
 
@@ -15,15 +15,23 @@ scripts/dev.sh
 
 首次创建 `.env` 会生成随机密码并设置文件权限 600。已有 `.env` 不会覆盖。已有配置的 `DEMO_PASSWORD` 为空时，请先设置不少于 12 位的密码，再运行初始化。
 
-| 入口 | 租户标识 | 用户名 | 初始密码 |
-| --- | --- | --- | --- |
-| 平台管理 | 无 | `platform` | `.env` 中的 `DEMO_PASSWORD` |
-| 机构管理 | `demo-a` 或 `demo-b` | `admin` | 同上 |
-| 医生 | `demo-a` 或 `demo-b` | `doctor1` / `doctor2` | 同上 |
+登录统一使用手机号和密码，无需填写机构标识。单个可用身份自动进入；多个机构先选择，进入后可在顶部下拉切换。同一手机号在各机构拥有独立角色。
 
-所有新账号首次登录必须更换初始密码。重复运行 `seed_demo` 不重置密码、不重复生成记录，也保留之后的演示修改。演示中的人员、档案和记录全部虚构。两名医生分别负责不同患者，即使同属研究成员，也不能读取其他医生患者的数据。
+| 测试手机号 | 身份 |
+| --- | --- |
+| `19900001000` | 平台管理员 |
+| `19900001001` | 机构 A 管理员，同时是机构 B 医生 1 |
+| `19900001002` | 机构 B 管理员 |
+| `19900001003` | 机构 A 医生 1 |
+| `19900001004` | 机构 A 医生 2 |
+| `19900001005` | 机构 B 医生 2 |
+
+这些号码仅是虚构演示标识，未验证、不发送短信。新环境初始密码来自 `.env` 的 `DEMO_PASSWORD`，首次登录须更换；升级现有环境沿用各主账号当前密码，不重置已修改密码。共享号码沿用原 A 管理员密码。重复初始化和升级不重复生成记录或覆盖密码。
+
+机构管理员可直接把已有手机号加入本机构，保留全局密码；成员停用只影响本机构。只有本人和平台管理员能修改全局密码；平台重置或全局停用撤销既有会话。切换前有未保存内容会确认，取消保留输入；其他页面已切换时，本页旧操作会被拒绝并清理旧内容。
 
 需要分别启动时：
+
 
 ```bash
 docker compose up -d db
@@ -31,16 +39,36 @@ uv sync --project backend --frozen
 pnpm --dir frontend install --frozen-lockfile
 VISPECT_MANAGEMENT=1 uv run --project backend --env-file .env --no-sync python backend/manage.py migrate --database migration --noinput
 uv run --project backend --env-file .env --no-sync python backend/manage.py seed_demo
-uv run --project backend --env-file .env --no-sync python backend/manage.py runserver 127.0.0.1:8000
+uv run --project backend --env-file .env --no-sync python scripts/runtime-server.py
 # 另一个终端
 pnpm --dir frontend dev
 ```
+
+## 旧环境身份升级
+
+先备份现有数据库，保留数据库卷。结构迁移后，旧 Account 保留原 ID 和历史引用，但旧用户名入口退役；需要显式绑定手机号才能登录。
+
+```bash
+# 先创建私有备份目录，切勿把数据库备份提交到仓库
+umask 077
+mkdir -p .local/backups
+docker compose exec -T db pg_dump -U postgres -Fc vispect > .local/backups/vispect-before-identity.dump
+VISPECT_MANAGEMENT=1 uv run --project backend --env-file .env --no-sync python backend/manage.py migrate --database migration --noinput
+# 默认预检，不写数据
+VISPECT_MANAGEMENT=1 uv run --project backend --env-file .env --no-sync python scripts/upgrade-demo-identities.py
+# 确认只有预期演示成员、无冲突或未映射旧账号后显式应用
+VISPECT_MANAGEMENT=1 uv run --project backend --env-file .env --no-sync python scripts/upgrade-demo-identities.py --apply
+```
+
+演示升级只接受 `demo-a`、`demo-b` 的完整初始化标记、固定旧管理员／医生账号及平台账号。其他旧账号不会被分配虚构号码；应用前需人工提供明确映射。业务数据和审计操作者保持原 ID，已停用成员保持停用。
+
+通用映射命令为 `migrate_login_identities --mapping /绝对路径/mapping.json`，默认只预检；加 `--apply` 才原子应用。文件格式为 `{"groups":[{"phone":"13800000001","account_ids":["旧成员UUID"],"primary_account_id":"本组旧成员UUID","enabled":true}]}`。同一手机号所有旧成员须在同一组，以主成员密码哈希为准；同机构重复身份或未知绑定冲突会拒绝整批迁移。备份恢复可使用 PostgreSQL `pg_restore`，应在维护环境验证后替换数据库。
 
 ## 权限和业务规则
 
 - 平台管理员管理机构、机构管理员、医生/患者/研究额度及用量，只访问控制面元数据。
 - 机构管理员查看本机构全部业务数据；医生查看负责患者和参与研究。受试者、访视、答案及导出同时检查两种关系。
-- 业务表强制启用 PostgreSQL RLS；请求内设置事务级租户上下文。业务和控制面运行账号不是所有者、超级用户或 BYPASSRLS 账号；迁移凭据单独使用。
+- 业务表强制启用 PostgreSQL RLS；请求内设置事务级机构上下文。业务和控制面运行账号不是所有者、超级用户或 BYPASSRLS 账号；迁移凭据单独使用。
 - 未删除医生、患者、研究占用额度；停用医生、暂停/结束研究仍占用额度。软删除释放，恢复重新检查；用量由数据库触发器维护。
 - 发布表单版本不可修改。研究生成首位受试者后，访视结构及所用版本固定。时间窗口只用于提醒，窗口外允许补录。
 - 已完成访视、已停止随访或已结束研究中的答案只读。修订须填写原因并保留历史；首版不提供解锁或恢复停止随访的入口。
@@ -79,7 +107,7 @@ docker compose run --rm -e DEMO_PASSWORD="$DEMO_PASSWORD" migrate python manage.
 
 ## 代码位置
 
-- `backend/apps/`：认证、租户、医生、患者、表单、研究、随访和治理模块。
+- `backend/apps/`：认证、机构、医生、患者、表单、研究、随访和治理模块。
 - `frontend/src/features/`：标准 Ant Design 页面；`form-engine/` 为共用预览/填写组件及解释器。
 - `contracts/`：表单 JSON Schema 与跨语言共享样例。
 - `docs/superpowers/specs/`、`plans/`：确认后的设计和实施计划。
