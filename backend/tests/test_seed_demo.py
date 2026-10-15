@@ -5,6 +5,7 @@ from apps.core.context import tenant_transaction
 
 def test_seed_demo_is_repeatable(world,monkeypatch):
     monkeypatch.setenv('DEMO_PASSWORD',world.password)
+    platform=world.accounts[None,'platform_admin'];platform.username='fixture-platform';world.owner_save(platform)
     from apps.doctors.models import Doctor
     from apps.patients.models import Patient
     from apps.forms.models import FormVersion
@@ -19,8 +20,9 @@ def test_seed_demo_is_repeatable(world,monkeypatch):
     from apps.core.types import Actor
     from apps.doctors.services import update_doctor
     t=Tenant.objects.using('control').get(slug='demo-a');admin=Account.objects.using('control').get(tenant=t,role='tenant_admin')
-    assert admin.must_change_password
-    with tenant_transaction(t.id):doctor=Doctor.objects.get(account__username='doctor1');assert doctor.account.must_change_password
+    from apps.accounts.models import LoginIdentity
+    assert LoginIdentity.objects.using('control').get(id=admin.identity_id).must_change_password
+    with tenant_transaction(t.id):doctor=Doctor.objects.get(account__username='doctor1');assert LoginIdentity.objects.using('control').get(id=doctor.account.identity_id).must_change_password
     update_doctor(Actor(admin.id,t.id,'tenant_admin',None),doctor.id,{'name':'保留的演示修改'},doctor.revision)
     call_command('seed_demo',stdout=StringIO());assert counts()==first and len(first)==2
     with tenant_transaction(t.id):assert Doctor.objects.get(id=doctor.id).name=='保留的演示修改'

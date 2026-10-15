@@ -55,31 +55,23 @@ class TestWorld:
         token=client.get('/api/auth/csrf/').json()['csrf_token']
         return client.post(path,data,format='json',HTTP_X_CSRFTOKEN=token,**extra)
 
-    def login(self,tenant,role,enforce_csrf=True,unified=False):
+    def login(self,tenant,role,enforce_csrf=True):
         client=APIClient(enforce_csrf_checks=enforce_csrf)
         account=self.accounts[tenant,role]
-        if unified:
-            phone=self.phone_for(tenant,role)
-            if account.identity_id is None:self.bind_identity(account,phone)
-            else:
-                from apps.accounts.models import LoginIdentity
-                phone=LoginIdentity.objects.using('migration').get(id=account.identity_id).phone
-            response=self.post(client,'/api/auth/login/',{'phone':phone,'password':self.password})
+        phone=self.phone_for(tenant,role)
+        if account.identity_id is None:self.bind_identity(account,phone)
+        else:
+            from apps.accounts.models import LoginIdentity
+            phone=LoginIdentity.objects.using('migration').get(id=account.identity_id).phone
+        response=self.post(client,'/api/auth/login/',{'phone':phone,'password':self.password})
+        assert response.status_code==200,response.content
+        data=response.json()
+        if data['next']=='choose_workspace':
+            response=self.post(client,'/api/auth/switch-workspace/',{'account_id':str(account.id),'workspace_token':data['workspace_token']})
             assert response.status_code==200,response.content
             data=response.json()
-            if data['next']=='choose_workspace':
-                response=self.post(client,'/api/auth/switch-workspace/',{'account_id':str(account.id),'workspace_token':data['workspace_token']})
-                assert response.status_code==200,response.content
-                data=response.json()
-            client.defaults['HTTP_X_WORKSPACE_TOKEN']=data['workspace_token']
-            return client
-        path='/api/auth/platform-login/' if tenant is None else '/api/auth/tenant-login/'
-        data={'username':account.username,'password':self.password}
-        if tenant is not None:data['tenant']=tenant
-        response=self.post(client,path,data)
-        assert response.status_code==200,response.content
+        client.defaults['HTTP_X_WORKSPACE_TOKEN']=data['workspace_token']
         return client
-
     def runtime_rows(self,tenant,table):
         with psycopg.connect(self.app_dsn) as conn:
             conn.execute("SELECT set_config('vispect.tenant_id',%s,true)",[str(self.tenants[tenant].id)])
@@ -135,7 +127,7 @@ class TestWorld:
             if password is None and account.has_usable_password():identity.password=account.password
             else:identity.set_password(password or self.password)
             identity.save(using='migration')
-        account.identity=identity;self.owner_save(account)
+        account.identity=identity;account.set_unusable_password();self.owner_save(account)
         return identity
 
     def phone_for(self,tenant,role):

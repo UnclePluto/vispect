@@ -143,7 +143,7 @@ def test_revoked_old_snapshot_cannot_clear_new_workspace(world):
     assert str(context.workspace_token)==changed['workspace_token']
 
 def test_unified_platform_has_no_implicit_organization_membership(world):
-    client=world.login(None,'platform_admin',unified=True)
+    client=world.login(None,'platform_admin')
     data=client.get('/api/auth/me/').json()
     assert client.get('/api/platform/tenants/').status_code==200
     assert client.get('/api/patients/').status_code==403

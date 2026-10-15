@@ -4,7 +4,7 @@ from .errors import ApiError
 
 def require_tenant(actor):
     if actor.tenant_id is None or actor.role == 'platform_admin':
-        raise ApiError('forbidden','当前身份不能访问租户业务',status=403)
+        raise ApiError('forbidden','当前身份不能访问机构业务',status=403)
     return actor
 
 def require_role(actor, *roles):

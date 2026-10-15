@@ -19,7 +19,7 @@ class Account(AbstractBaseUser):
     tenant = models.ForeignKey('tenants.Tenant', null=True, blank=True, on_delete=models.PROTECT)
     username = models.CharField(max_length=150)
     name = models.CharField(max_length=200)
-    role = models.CharField(max_length=24, choices=[('platform_admin','超级管理员'),('tenant_admin','租户管理员'),('doctor','医生')])
+    role = models.CharField(max_length=24, choices=[('platform_admin','超级管理员'),('tenant_admin','机构管理员'),('doctor','医生')])
     doctor_id = models.UUIDField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     must_change_password = models.BooleanField(default=False)

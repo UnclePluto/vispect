@@ -5,7 +5,7 @@ import {http,HttpResponse} from 'msw';
 import {setupServer} from 'msw/node';
 import {AuthProvider} from '../auth/AuthProvider';
 import {PatientEditor} from './PatientEditor';
-const server=setupServer(http.get('*/api/auth/me/',()=>HttpResponse.json({role:'doctor',doctor_id:'d',must_change_password:false})),http.get('*/api/auth/csrf/',()=>HttpResponse.json({csrf_token:'csrf'})),http.post('*/api/patients/',async({request})=>{const data=await request.json() as {code:string};expect(data.code).toBe('000001');return HttpResponse.json({code:'quota_exceeded',message:'患者额度已满',fields:{}},{status:409})}));
+const server=setupServer(http.get('*/api/auth/me/',()=>HttpResponse.json({user:{id:'u',phone:'+8613900000001',name:'测试',must_change_password:false},actor:{account_id:'a',role:'doctor',doctor_id:'d',must_change_password:false},workspaces:[],workspace_token:'token-a',next:'ready'})),http.get('*/api/auth/csrf/',()=>HttpResponse.json({csrf_token:'csrf'})),http.post('*/api/patients/',async({request})=>{const data=await request.json() as {code:string};expect(data.code).toBe('000001');return HttpResponse.json({code:'quota_exceeded',message:'患者额度已满',fields:{}},{status:409})}));
 beforeAll(()=>server.listen({onUnhandledRequest:'error'}));afterAll(()=>server.close());
 test('档案编号保留前导零，保存失败保留输入',async()=>{
  render(<QueryClientProvider client={new QueryClient()}><AuthProvider><PatientEditor open onCancel={()=>{}} onSaved={()=>{}}/></AuthProvider></QueryClientProvider>);

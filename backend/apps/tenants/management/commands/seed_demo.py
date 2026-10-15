@@ -1,7 +1,7 @@
 import os,uuid,copy
 from django.core.management.base import BaseCommand,CommandError
 from django.db import transaction
-from apps.accounts.models import Account
+from apps.accounts.models import Account,LoginIdentity
 from apps.core.context import tenant_transaction
 from apps.core.types import Actor
 from apps.core.models import AuditEvent
@@ -44,15 +44,21 @@ class Command(BaseCommand):
         with transaction.atomic(using='control'):
             platform=Account.objects.using('control').filter(tenant_id=None,username='platform').first()
             if platform is None:
-                platform=Account(username='platform',name='平台管理员',role='platform_admin',must_change_password=True);platform.set_password(password);platform.save(using='control')
+                identity=LoginIdentity.objects.using('control').filter(phone='+8619900001000').first()
+                if identity is None:
+                    identity=LoginIdentity(phone='+8619900001000',name='平台管理员');identity.set_password(password);identity.save(using='control')
+                platform=Account(username='platform',identity=identity,name='平台管理员',role='platform_admin');platform.set_unusable_password();platform.save(using='control')
                 audit(Actor(platform.id,None,'platform_admin',None),'bootstrap_platform','account',platform.id,{'username':'platform'})
+        if platform.identity_id is None:raise CommandError('旧演示账号尚未映射手机号，请先运行 upgrade-demo-identities.py 预检并应用。')
         platform_actor=Actor(platform.id,None,'platform_admin',None)
         for slug,label in [('demo-a','示例健康机构 A'),('demo-b','示例健康机构 B')]:
             tenant=Tenant.objects.using('control').filter(slug=slug).first()
             created=tenant is None
-            if created:tenant=create_tenant(platform_actor,{'slug':slug,'name':label,'admin_username':'admin','admin_password':password})
+            if created:tenant=create_tenant(platform_actor,{'slug':slug,'name':label,'admin_phone':'19900001001' if slug=='demo-a' else '19900001002','admin_initial_password':password})
             admin=Account.objects.using('control').filter(tenant=tenant,role='tenant_admin',is_active=True).first()
             if admin is None:raise CommandError(f'{slug} 没有可用机构管理员，未修改现有数据。')
+            if admin.identity_id is None:raise CommandError('旧机构管理员尚未映射手机号，请先运行演示身份升级。')
+            if created:admin.username='admin';admin.save(using='control',update_fields=['username'])
             actor=Actor(admin.id,tenant.id,'tenant_admin',None)
             with tenant_transaction(tenant.id):
                 if AuditEvent.objects.filter(action='seed_demo_complete',object_id=tenant.id).exists():
@@ -60,11 +66,16 @@ class Command(BaseCommand):
                 if any(model.objects.exists() for model in [Doctor,Patient,Form,Study]):raise CommandError(f'{slug} 已有非本次初始化的数据，拒绝覆盖或混入演示记录。')
                 self.seed_tenant(actor,password)
                 audit(actor,'seed_demo_complete','tenant',tenant.id,{'version':1,'synthetic':True})
-            self.stdout.write(f'{slug} 初始化完成；账号 admin、doctor1、doctor2，密码来自 DEMO_PASSWORD。')
-        self.stdout.write('平台账号 platform；所有新账号首次登录必须修改密码。')
+            self.stdout.write(f'{slug} 初始化完成；使用演示手机号登录，密码来自 DEMO_PASSWORD。')
+        self.stdout.write('演示手机号为虚构测试标识，未验证、不发送短信；所有新身份首次登录必须修改密码。')
 
     def seed_tenant(self,actor,password):
-        doctors=[create_doctor(actor,{'name':f'示例医生{i}','username':f'doctor{i}','password':password,'organization':'示例机构','department':'健康管理','title':'研究成员'}) for i in [1,2]]
+        slug=Tenant.objects.using('control').get(id=actor.tenant_id).slug
+        phones=['19900001003','19900001004'] if slug=='demo-a' else ['19900001001','19900001005']
+        doctors=[]
+        for i,phone in enumerate(phones,1):
+            doctor=create_doctor(actor,{'name':f'示例医生{i}','login_phone':phone,'initial_password':password,'organization':'示例机构','department':'健康管理','title':'研究成员'})
+            doctor.account.username=f'doctor{i}';doctor.account.save(update_fields=['username']);doctors.append(doctor)
         patients=[create_patient(actor,{'name':f'示例患者{name}','code':f'{i:06d}','gender':'unknown','phone':'虚构联系方式','notes':'此档案为虚构演示资料。','doctor_ids':[doctors[i-1].id] if i<=2 else [d.id for d in doctors]}) for i,name in enumerate(['甲','乙','丙'],1)]
         survey=create_form(actor,copy.deepcopy(SURVEY));survey_v1=publish_form(actor,survey.id,survey.revision,uuid.uuid4().hex)
         updated=copy.deepcopy(SURVEY);updated['questions'][1]['title']='本次状况变化说明';survey=save_draft(actor,survey.id,updated,2);publish_form(actor,survey.id,survey.revision,uuid.uuid4().hex)

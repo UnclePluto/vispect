@@ -49,7 +49,7 @@ def test_existing_phone_preserves_administrator_password(world):
     token=client.get('/api/auth/csrf/').json()['csrf_token']
     response=client.patch(f'/api/platform/tenants/{tenant.id}/administrator/',{'phone':world.phone_for('a','tenant_admin'),'name':'更新管理员','enabled':True,'initial_password':'ignored','expected_tenant_revision':1,'expected_admin_id':str(world.accounts['a','tenant_admin'].id)},format='json',HTTP_X_CSRFTOKEN=token)
     assert response.status_code == 200
-    assert world.login('a','tenant_admin',unified=True).get('/api/auth/me/').json()['actor']['name'] == '更新管理员'
+    assert world.login('a','tenant_admin').get('/api/auth/me/').json()['actor']['name'] == '更新管理员'
 
 def test_quota_limit_over_database_range_is_validation_error(world):
     client=world.login(None,'platform_admin')

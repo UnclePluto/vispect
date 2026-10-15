@@ -1,11 +1,11 @@
 import {api} from '../../api/client';
 import type {Page,Revision} from '../../api/types';
-export type Doctor=Revision&{name:string;username:string;phone:string;organization:string;department:string;title:string;enabled:boolean;created_at:string;deleted_at:string|null};
-export type DoctorValues={name:string;username?:string;password?:string;phone?:string;organization?:string;department?:string;title?:string;enabled?:boolean};
+export type Doctor=Revision&{name:string;login_phone:string;phone:string;organization:string;department:string;title:string;enabled:boolean;created_at:string;deleted_at:string|null};
+export type DoctorValues={name:string;login_phone?:string;initial_password?:string;phone?:string;organization?:string;department?:string;title?:string;enabled?:boolean};
 export const getDoctors=(page:number,search:string,enabled?:boolean)=>api<Page<Doctor>>(`/api/doctors/?page=${page}&search=${encodeURIComponent(search)}${enabled===undefined?'':`&enabled=${enabled}`}`);
 export const getDoctor=(id:string)=>api<Doctor>(`/api/doctors/${id}/`);
 export const createDoctor=(body:DoctorValues)=>api<Doctor>('/api/doctors/',{method:'POST',body});
-export const updateDoctor=(doctor:Doctor,body:DoctorValues)=>api<Doctor>(`/api/doctors/${doctor.id}/`,{method:'PATCH',body:{...body,expected_revision:doctor.revision}});
+export const updateDoctor=(doctor:Doctor,body:DoctorValues)=>api<Doctor>(`/api/doctors/${doctor.id}/`,{method:'PATCH',body:{...Object.fromEntries(Object.entries(body).filter(([key])=>!['login_phone','initial_password'].includes(key))),expected_revision:doctor.revision}});
 export const deleteDoctor=(doctor:Doctor)=>api<Doctor>(`/api/doctors/${doctor.id}/`,{method:'DELETE',body:{expected_revision:doctor.revision}});
 export const setDoctorEnabled=(doctor:Doctor,enabled:boolean)=>api<Doctor>(`/api/doctors/${doctor.id}/enabled/`,{method:'POST',body:{enabled,expected_revision:doctor.revision}});
 export const getDoctorOptions=()=>api<Page<{id:string;name:string}>>('/api/doctors/options/');

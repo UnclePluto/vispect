@@ -61,7 +61,7 @@ def test_direct_sql_cannot_exceed_quota(world):
     with psycopg.connect(world.app_dsn) as conn:
         tenant=world.tenants['a'].id;account_id=uuid.uuid4()
         conn.execute("SELECT set_config('vispect.tenant_id',%s,true)",[str(tenant)])
-        conn.execute("INSERT INTO accounts_account(id,tenant_id,username,name,password,role,is_active,must_change_password,revision,created_at) VALUES (%s,%s,'sql-doctor','测试','unused','doctor',true,false,1,now())",[account_id,tenant])
+        conn.execute("INSERT INTO accounts_account(id,tenant_id,identity_id,username,name,password,role,is_active,must_change_password,revision,created_at) VALUES (%s,%s,%s,'sql-doctor','测试','unused','doctor',true,false,1,now())",[account_id,tenant,world.accounts['b','doctor'].identity_id])
         with pytest.raises(psycopg.errors.CheckViolation) as exc:
             conn.execute("INSERT INTO doctors_doctor(id,tenant_id,account_id,name,phone,organization,department,title,revision,created_at,updated_at) VALUES (%s,%s,%s,'测试','','','','',1,now(),now())",[uuid.uuid4(),tenant,account_id])
         assert exc.value.diag.constraint_name == 'quota_exceeded_doctors'
@@ -95,7 +95,7 @@ def test_member_cannot_change_global_password(world):
     token=client.get('/api/auth/csrf/').json()['csrf_token']
     response=client.patch(f'/api/doctors/{doctor_id}/',{'name':'更新姓名','password':'','expected_revision':1},format='json',HTTP_X_CSRFTOKEN=token)
     assert response.status_code == 400
-    assert world.login('a','doctor',unified=True).get('/api/auth/me/').status_code == 200
+    assert world.login('a','doctor').get('/api/auth/me/').status_code == 200
 
 def test_quota_adjustment_and_creation_do_not_deadlock(world):
     from threading import Event

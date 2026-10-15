@@ -19,12 +19,12 @@ def mutate_with_quota(actor,resource,mutation,*,delta=1):
         with tenant_transaction(actor.tenant_id):
             quota=TenantQuota.objects.select_for_update().get(tenant_id=actor.tenant_id)
             if delta>0 and getattr(quota,f'{resource}_used')>=getattr(quota,f'{resource}_limit'):
-                raise ApiError('quota_exceeded','该类资源数量已达租户上限')
+                raise ApiError('quota_exceeded','该类资源数量已达机构上限')
             return mutation()
     except IntegrityError as exc:
         name=getattr(getattr(exc.__cause__,'diag',None),'constraint_name','') or ''
         if name.startswith('quota_exceeded'):
-            raise ApiError('quota_exceeded','该类资源数量已达租户上限') from exc
+            raise ApiError('quota_exceeded','该类资源数量已达机构上限') from exc
         raise
 
 def quota_trigger_sql(table_name,resource):

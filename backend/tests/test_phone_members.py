@@ -18,11 +18,11 @@ def test_add_existing_phone_preserves_global_credentials(world):
     original.refresh_from_db(using='control');assert doctor.account.identity_id==original.id
     assert original.check_password(world.password) and original.revision==1
     assert world.accounts['a','tenant_admin'].role=='tenant_admin'
-    client=world.login('b','tenant_admin',unified=True)
+    client=world.login('b','tenant_admin')
     payload=client.get(f'/api/doctors/{doctor.id}/').json();assert payload['login_phone']==original.phone
     response=world.post(client,'/api/members/phone-status/',{'phone':original.phone})
     assert response.status_code==200 and response.json()=={'phone':original.phone,'registered':True}
-    assert world.post(world.login('a','doctor',unified=True),'/api/members/phone-status/',{'phone':PHONE}).status_code==403
+    assert world.post(world.login('a','doctor'),'/api/members/phone-status/',{'phone':PHONE}).status_code==403
 
 def test_duplicate_or_deleted_member_not_recreated(world):
     a=world.actor('a','tenant_admin');d=create_doctor(a,data(world))
@@ -61,6 +61,6 @@ def test_member_failure_rolls_back_identity_and_doctor(world,monkeypatch,failure
 
 @pytest.mark.parametrize('field,value',[('password','New-Strong-2026!'),('login_phone',PHONE),('identity_id','abc'),('role','tenant_admin')])
 def test_member_patch_cannot_change_global_credentials(world,field,value):
-    client=world.login('a','tenant_admin',unified=True);token=client.get('/api/auth/csrf/').json()['csrf_token']
+    client=world.login('a','tenant_admin');token=client.get('/api/auth/csrf/').json()['csrf_token']
     response=client.patch(f"/api/doctors/{world.accounts['a','doctor'].doctor_id}/",{field:value,'expected_revision':1},format='json',HTTP_X_CSRFTOKEN=token)
     assert response.status_code==400

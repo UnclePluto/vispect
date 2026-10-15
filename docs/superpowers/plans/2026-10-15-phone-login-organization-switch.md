@@ -173,12 +173,12 @@
 
 **接口：** 新增前端 `/accounts` 平台专属页面；机构创建和管理员弹窗使用手机号、新用户初始密码、现有手机号保留原密码提示。探测状态失效时以保存响应为准，不依赖初始输入状态。
 
-- [ ] 写“已注册手机不展示密码”“迟到手机号探测不覆盖新输入”“全局管理仅平台可见”测试：探测未注册手机号时显示初始密码，已注册时隐藏并清除旧密码输入，只显示保留原密码提示；手机号改动取消旧探测响应，不能把前一个手机号的 registered 状态套用到新号；编辑成员不能提交全局密码或任意 role。
-- [ ] 写 `test_legacy_login_routes_removed`、`test_legacy_session_and_password_rejected`、`test_runtime_member_insert_requires_identity`：旧 tenant-login／platform-login 返回 404，旧 session 格式不能认证，旧 Account 密码不可用；非平台用户直接打开 accounts 页面和请求接口都被拒绝。新增 Account 缺 identity 的直接 INSERT 由 app／control 执行时被数据库拒绝，已有历史 null 行仍保留引用且不能登录；迁移测试仅由 migration 角色构造旧记录样例，不向运行角色提供绕过开关。
-- [ ] 运行对应前端成员／平台测试及 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_auth.py -q`，预期旧入口仍存在或新界面缺失时失败。
-- [ ] 实现全局账号精确查询、停用／启用、重置密码；密码不回显。成员启用与全局状态分开呈现。退役旧入口与临时旧 session 解析；新增 INSERT／identity 变更约束，禁止把已绑定 Account 改绑另一人，禁止为新成员省略 identity；允许管理迁移对历史 null 首次绑定。
-- [ ] 更新用户可见文案：租户登录／管理／上限／工作空间改为机构相应称呼；内部路径／tenant_id 不重命名。检索 `rg -n '租户|用户名|重置密码' frontend/src backend/apps`，逐项检查：仅历史兼容字段或平台明确授权重置保留，机构端不可残留旧登录含义。
-- [ ] 运行前端全套测试、类型／build 和完整后端 `uv run --project backend --env-file .env --no-sync pytest backend/tests -q`，预期通过。提交：`管理：完成手机号成员界面并退役旧登录`。
+- [x] 写“已注册手机不展示密码”“迟到手机号探测不覆盖新输入”“全局管理仅平台可见”测试：探测未注册手机号时显示初始密码，已注册时隐藏并清除旧密码输入，只显示保留原密码提示；手机号改动取消旧探测响应，不能把前一个手机号的 registered 状态套用到新号；编辑成员不能提交全局密码或任意 role。
+- [x] 写 `test_legacy_login_routes_removed`、`test_legacy_session_and_password_rejected`、`test_runtime_member_insert_requires_identity`：旧 tenant-login／platform-login 返回 404，旧 session 格式不能认证，旧 Account 密码不可用；非平台用户直接打开 accounts 页面和请求接口都被拒绝。新增 Account 缺 identity 的直接 INSERT 由 app／control 执行时被数据库拒绝，已有历史 null 行仍保留引用且不能登录；迁移测试仅由 migration 角色构造旧记录样例，不向运行角色提供绕过开关。
+- [x] 运行对应前端成员／平台测试及 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_auth.py -q`，预期旧入口仍存在或新界面缺失时失败。
+- [x] 实现全局账号精确查询、停用／启用、重置密码；密码不回显。成员启用与全局状态分开呈现。退役旧入口与临时旧 session 解析；新增 INSERT／identity 变更约束，禁止把已绑定 Account 改绑另一人，禁止为新成员省略 identity；允许管理迁移对历史 null 首次绑定。
+- [x] 更新用户可见文案：租户登录／管理／上限／工作空间改为机构相应称呼；内部路径／tenant_id 不重命名。检索 `rg -n '租户|用户名|重置密码' frontend/src backend/apps`，逐项检查：仅历史兼容字段或平台明确授权重置保留，机构端不可残留旧登录含义。
+- [x] 运行前端全套测试、类型／build 和完整后端 `uv run --project backend --env-file .env --no-sync pytest backend/tests -q`，预期通过。提交：`管理：完成手机号成员界面并退役旧登录`。
 
 ### Task 10: 演示升级、真实浏览器闭环与最终交付
 
