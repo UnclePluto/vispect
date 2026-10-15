@@ -42,8 +42,9 @@ def current_workspace(request,options=None):
     options=identity_workspaces(request.login_identity.id) if options is None else options
     workspace=next((w for w in options if w['account_id']==str(context.active_account_id)),None)
     if workspace is None:
-        context.active_account_id=None;context.workspace_token=uuid.uuid4()
-        context.save(using='control',update_fields=['active_account','workspace_token'])
+        LoginSessionContext.objects.using('control').filter(id=context.id,active_account_id=context.active_account_id,workspace_token=context.workspace_token).update(active_account_id=None,workspace_token=uuid.uuid4())
+        context.refresh_from_db(using='control')
+        workspace=next((w for w in options if w['account_id']==str(context.active_account_id)),None)
     return workspace
 
 def actor_payload(request,workspace):

@@ -110,12 +110,12 @@
 
 **接口：** `lock_workspace_context(context_id: UUID, *, using: str, exclusive: bool) -> None`（调用者已在事务内）；`switch_workspace(request, account_id: UUID, expected_token: str) -> AuthEnvelope`；`workspace_transaction(request, *, using: str) -> ContextManager[Actor]`；GET workspaces 返回本人列表，POST switch 接收 `{account_id, workspace_token}`。
 
-- [ ] 写 `test_switch_requires_owned_active_workspace`、`test_stale_workspace_token_rejected`、`test_member_revocation_keeps_other_workspace`：本人 A→B 返回新 token、正确医生 Actor；切换到他人成员返回 404；平台身份不能伪造机构成员；缺失或过期业务令牌 409，伪造 X-Tenant-ID 不改变当前机构。停用 A 成员／机构后返回 workspace_unavailable，统一登录仍有效、B 可选择。
-- [ ] 用两个独立连接和线程事件写 `test_switch_waits_for_authorized_write`、`test_waiting_old_write_revalidates_token`、`test_concurrent_switch_only_one_wins`：A 写入持共享锁时，B 切换未完成；释放后切换完成。另一个携带旧 token 的请求在切换锁后等待，得到 409，断言 B 中该对象数量不变。并发同旧 token 两次切换只能成功一次。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_workspace_switch.py -q`，预期缺少令牌核验／锁或切换入口时失败；不能用固定 sleep 推断竞争结果。
-- [ ] 锁键固定为 `sha256(b'vispect.workspace:' + context_id.bytes)[:8]` 的有符号 64 位值；业务请求在其 default／control 事务内持共享事务锁，切换在 control 事务内持排他事务锁。获得锁后从控制面重新读取权威上下文和成员状态，再设置临床事务 RLS；不使用请求开始时缓存的旧活动成员。所有别名指向同一物理数据库的锁空间。
-- [ ] 切换和成员撤销清空上下文需更新 token 并原子提交；事务之外不得延迟读取导出数据。Django session 中只引用稳定 context ID，避免响应末尾重存旧 Actor。幂等回执仍按当前 Account 和授权范围读取；旧 token 在读回执前拒绝。
-- [ ] world.login 设置 APIClient 的 `HTTP_X_WORKSPACE_TOKEN`，业务测试仍可通过；增加显式 stale-token client，不让测试辅助方法自动刷新从而掩盖旧标签页问题。运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_workspace_switch.py backend/tests/test_rls.py backend/tests/test_idempotency.py -q`，预期通过。提交：`权限：增加机构切换令牌与会话事务屏障`。
+- [x] 写 `test_switch_requires_owned_active_workspace`、`test_stale_workspace_token_rejected`、`test_member_revocation_keeps_other_workspace`：本人 A→B 返回新 token、正确医生 Actor；切换到他人成员返回 404；平台身份不能伪造机构成员；缺失或过期业务令牌 409，伪造 X-Tenant-ID 不改变当前机构。停用 A 成员／机构后返回 workspace_unavailable，统一登录仍有效、B 可选择。
+- [x] 用两个独立连接和线程事件写 `test_switch_waits_for_authorized_write`、`test_waiting_old_write_revalidates_token`、`test_concurrent_switch_only_one_wins`：A 写入持共享锁时，B 切换未完成；释放后切换完成。另一个携带旧 token 的请求在切换锁后等待，得到 409，断言 B 中该对象数量不变。并发同旧 token 两次切换只能成功一次。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_workspace_switch.py -q`，预期缺少令牌核验／锁或切换入口时失败；不能用固定 sleep 推断竞争结果。
+- [x] 锁键固定为 `sha256(b'vispect.workspace:' + context_id.bytes)[:8]` 的有符号 64 位值；业务请求在其 default／control 事务内持共享事务锁，切换在 control 事务内持排他事务锁。获得锁后从控制面重新读取权威上下文和成员状态，再设置临床事务 RLS；不使用请求开始时缓存的旧活动成员。所有别名指向同一物理数据库的锁空间。
+- [x] 切换和成员撤销清空上下文需更新 token 并原子提交；事务之外不得延迟读取导出数据。Django session 中只引用稳定 context ID，避免响应末尾重存旧 Actor。幂等回执仍按当前 Account 和授权范围读取；旧 token 在读回执前拒绝。
+- [x] world.login 设置 APIClient 的 `HTTP_X_WORKSPACE_TOKEN`，业务测试仍可通过；增加显式 stale-token client，不让测试辅助方法自动刷新从而掩盖旧标签页问题。运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_workspace_switch.py backend/tests/test_rls.py backend/tests/test_idempotency.py -q`，预期通过。提交：`权限：增加机构切换令牌与会话事务屏障`。
 
 ### Task 5: 手机号医生成员管理与事务回滚
 

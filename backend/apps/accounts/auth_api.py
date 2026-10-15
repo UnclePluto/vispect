@@ -27,3 +27,18 @@ class WorkspacesView(APIView):
     def get(self,request):
         options=auth_envelope(request._request)['workspaces']
         return Response({'count':len(options),'results':options})
+
+class SwitchWorkspaceSerializer(serializers.Serializer):
+    account_id=serializers.UUIDField()
+    workspace_token=serializers.UUIDField()
+    def to_internal_value(self,data):
+        unknown=set(data)-set(self.fields)
+        if unknown:raise serializers.ValidationError({name:['不支持的切换字段'] for name in unknown})
+        return super().to_internal_value(data)
+
+class SwitchWorkspaceView(APIView):
+    permission_classes=[PrincipalPermission]
+    def post(self,request):
+        from .workspaces import switch_workspace
+        data=SwitchWorkspaceSerializer(data=request.data);data.is_valid(raise_exception=True)
+        return Response(switch_workspace(request._request,data.validated_data['account_id'],str(data.validated_data['workspace_token'])))

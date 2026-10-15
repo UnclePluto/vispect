@@ -37,3 +37,6 @@ urlpatterns += [path('api/audit/',AuditView.as_view()),path('api/platform/audit/
 
 from apps.accounts.auth_api import PhoneLoginView,WorkspacesView
 urlpatterns += [path('api/auth/login/',PhoneLoginView.as_view()),path('api/auth/workspaces/',WorkspacesView.as_view())]
+
+from apps.accounts.auth_api import SwitchWorkspaceView
+urlpatterns += [path('api/auth/switch-workspace/',SwitchWorkspaceView.as_view())]
