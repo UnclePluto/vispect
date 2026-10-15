@@ -86,11 +86,11 @@
 
 **接口：** `preflight_mapping(groups: list[dict]) -> MigrationReport`；`apply_mapping(groups: list[dict]) -> MigrationReport`。命令 `migrate_login_identities --mapping PATH` 默认只预检，显式 `--apply` 应用。JSON 为 `{"groups":[{"phone":"13800000001","primary_account_id":"UUID","account_ids":["UUID"],"enabled":true}]}`；每组主账号必须出现在本组，同一账号只出现一次。
 
-- [ ] 写 `test_mapping_preserves_history_and_primary_password`，断言不同机构的两个旧账号可合并为同一 identity，但 Account／Doctor／答案／审计 ID 不变；两个旧密码不同时只保留显式 primary 的哈希；`apply_mapping` 重跑不重置密码。旧成员 is_active 各自保留，不据此合成全局停用。
-- [ ] 增加 `test_mapping_conflict_rolls_back_every_group` 和 `test_mapping_rerun_preserves_new_password`：第二组同机构重复身份、重复映射、显式 enabled 矛盾、主账号缺失、非法手机号，预检报具体冲突且 `identity_count_after == identity_count_before`。遗漏账号出现在 `unmapped_account_ids`；不自动按姓名／联系方式合并。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_identity_migration.py -q`。预期缺少命令／服务时失败。
-- [ ] 使用 migration 连接、显式机构上下文和一个整体事务应用映射；复制主账号密码哈希，不打印哈希／明文；任一绑定前要求合法预检。绑定成功设置旧密码不可用；组内任一旧首次改密标记为 true 时，新身份要求改密。已迁移组验证映射一致后跳过，不覆盖现有身份状态或新密码。
-- [ ] 运行本任务测试，预期全部通过。提交：`迁移：增加统一身份映射预检和原子升级`。此任务只验证独立测试数据，不对运行业务库执行真实映射。
+- [x] 写 `test_mapping_preserves_history_and_primary_password`，断言不同机构的两个旧账号可合并为同一 identity，但 Account／Doctor／答案／审计 ID 不变；两个旧密码不同时只保留显式 primary 的哈希；`apply_mapping` 重跑不重置密码。旧成员 is_active 各自保留，不据此合成全局停用。
+- [x] 增加 `test_mapping_conflict_rolls_back_every_group` 和 `test_mapping_rerun_preserves_new_password`：第二组同机构重复身份、重复映射、显式 enabled 矛盾、主账号缺失、非法手机号，预检报具体冲突且 `identity_count_after == identity_count_before`。遗漏账号出现在 `unmapped_account_ids`；不自动按姓名／联系方式合并。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_identity_migration.py -q`。预期缺少命令／服务时失败。
+- [x] 使用 migration 连接、显式机构上下文和一个整体事务应用映射；复制主账号密码哈希，不打印哈希／明文；任一绑定前要求合法预检。绑定成功设置旧密码不可用；组内任一旧首次改密标记为 true 时，新身份要求改密。已迁移组验证映射一致后跳过，不覆盖现有身份状态或新密码。
+- [x] 运行本任务测试，预期全部通过。提交：`迁移：增加统一身份映射预检和原子升级`。此任务只验证独立测试数据，不对运行业务库执行真实映射。
 
 ### Task 3: 统一登录、密码与服务端会话状态
 
