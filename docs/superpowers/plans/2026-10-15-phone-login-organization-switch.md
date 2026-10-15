@@ -161,11 +161,11 @@
 
 **接口：** `useWorkspaceDirty(key: string, dirty: boolean) -> void`；`useWorkspaceChanges() -> {confirmChange(): Promise<boolean>, clear(): void}`。Provider 在 Ant Design App 内、AuthProvider 外，使切换服务可请求确认；DynamicForm 新增可选 `onDirtyChange(dirty: boolean)`，只报告相对于当前已保存答案的修改，不改变题目规则或保存行为。
 
-- [ ] 写“未保存时取消切换保留输入”“保存成功清除登记，冲突保留登记”测试：未保存表单／弹窗／答案时切换出现确认，取消时没有调用切换 API、输入和当前空间不变；确认后仅一次调用，成功后登记与旧输入消失；保存成功清 dirty，冲突和保存失败保留 dirty。
-- [ ] 增加“其他标签页切换后清理旧编辑内容”测试：当前页立即清旧数据并提示“机构已在其他页面切换，未保存内容未提交”，不以本页未保存确认阻止服务端已发生的切换，不自动提交草稿。
-- [ ] 运行 `pnpm --dir frontend test --run src/features/auth/workspaceChanges.test.tsx`，预期缺少登记／确认导致失败。
-- [ ] 为列出的编辑器接入登记，登记 key 包含业务记录／题目或绑定 ID，组件卸载自动注销；弹窗未修改不误报，保存新 revision 后重设基准。研究成员／流程继续保留编辑起点 revision；新增提示不能重新引入并发覆盖问题。
-- [ ] 运行前端全套 `pnpm --dir frontend test --run` 和 build，预期通过，动态表单条件、跳题及独立“＋”选项按钮回归不变。提交：`交互：切换机构前保护未保存内容`。
+- [x] 写“未保存时取消切换保留输入”“保存成功清除登记，冲突保留登记”测试：未保存表单／弹窗／答案时切换出现确认，取消时没有调用切换 API、输入和当前空间不变；确认后仅一次调用，成功后登记与旧输入消失；保存成功清 dirty，冲突和保存失败保留 dirty。
+- [x] 增加“其他标签页切换后清理旧编辑内容”测试：当前页立即清旧数据并提示“机构已在其他页面切换，未保存内容未提交”，不以本页未保存确认阻止服务端已发生的切换，不自动提交草稿。
+- [x] 运行 `pnpm --dir frontend test --run src/features/auth/workspaceChanges.test.tsx`，预期缺少登记／确认导致失败。
+- [x] 为列出的编辑器接入登记，登记 key 包含业务记录／题目或绑定 ID，组件卸载自动注销；弹窗未修改不误报，保存新 revision 后重设基准。研究成员／流程继续保留编辑起点 revision；新增提示不能重新引入并发覆盖问题。
+- [x] 运行前端全套 `pnpm --dir frontend test --run` 和 build，预期通过，动态表单条件、跳题及独立“＋”选项按钮回归不变。提交：`交互：切换机构前保护未保存内容`。
 
 ### Task 9: 手机号管理界面、机构文案与旧入口退役
 

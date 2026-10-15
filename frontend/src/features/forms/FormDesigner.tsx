@@ -1,3 +1,4 @@
+import {useWorkspaceDirty} from '../auth/WorkspaceChangesProvider';
 import {useEffect,useRef,useState} from 'react';
 import {Alert,Button,Card,Input,Space,Spin,Tag,Typography} from 'antd';
 import {useParams} from 'react-router-dom';
@@ -13,6 +14,7 @@ import {FormPreview} from './FormPreview';
 import {cloneField,moveField,newField} from './designerState';
 export function FormDesigner(){
  const {id}=useParams(),cache=useQueryClient();const q=useQuery({queryKey:['form',id],queryFn:()=>getForm(id!)});const [record,setRecord]=useState<FormRecord>(),[definition,setDefinition]=useState<FormDefinition>(),[selected,setSelected]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[preview,setPreview]=useState(false),[dirty,setDirty]=useState(false);const loaded=useRef('');
+ useWorkspaceDirty(`form:${id}`,dirty);
  useEffect(()=>{if(q.data&&loaded.current!==id){loaded.current=id!;setRecord(q.data);const d=q.data.draft_definition??q.data.latest_version?.definition;setDefinition(d);setSelected(d?.questions[0]?.id??'');setDirty(false)}},[q.data,id]);
  useEffect(()=>{const guard=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard)},[dirty]);
  if(q.isLoading||!record||!definition)return q.error?<Alert type="error" title={errorMessage(q.error)}/>:<Spin/>;

@@ -1,3 +1,4 @@
+import {useWorkspaceDirty} from '../auth/WorkspaceChangesProvider';
 import {useEffect,useState} from 'react';
 import {Alert,Button,Card,Form,Input,InputNumber,Select,Space,Switch,Typography} from 'antd';
 import {ArrowDownOutlined,ArrowUpOutlined,DeleteOutlined,PlusOutlined} from '@ant-design/icons';
@@ -8,6 +9,7 @@ import {saveProtocol,type Study,type Stage,type Binding} from './api';
 const kinds={screening:'筛选期',baseline:'基线期',followup:'其他访视',end:'结束期'};
 export function ProtocolEditor({study,onSaved}:{study:Study;onSaved:(s:Study)=>void}){
  const [stages,setStages]=useState<Stage[]>(study.stages??[]),[error,setError]=useState(''),[busy,setBusy]=useState(false),[dirty,setDirty]=useState(false),[baseRevision,setBaseRevision]=useState(study.revision);const options=useQuery({queryKey:['version-options'],queryFn:getVersionOptions});const readOnly=!study.editable||study.protocol_frozen||study.state==='ended';
+ useWorkspaceDirty(`protocol:${study.id}`,dirty);
  useEffect(()=>{if(!dirty){setStages(study.stages??[]);setBaseRevision(study.revision)}},[study.stages,study.revision,dirty]);function change(next:Stage[]){setStages(next);setDirty(true);setError('')}
  function patch(i:number,values:Partial<Stage>){change(stages.map((s,n)=>n===i?{...s,...values}:s))}function binding(i:number,n:number,values:Partial<Binding>){patch(i,{bindings:stages[i].bindings.map((b,m)=>m===n?{...b,...values}:b)})}
  async function save(){setBusy(true);setError('');try{onSaved(await saveProtocol({...study,revision:baseRevision},stages));setDirty(false)}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
