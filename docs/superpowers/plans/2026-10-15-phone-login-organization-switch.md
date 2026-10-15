@@ -73,12 +73,12 @@
 
 **接口：** `normalize_phone(raw: str) -> str`；`ensure_identity(actor: Actor, phone: str, initial_password: str | None, name: str, *, using: str) -> (LoginIdentityRef, bool)`；`probe_phone(actor, phone) -> {phone, registered}`；`member_phone(actor, account_id) -> str`；`identity_workspaces(identity_id: UUID) -> list[WorkspaceOption]`。后四者通过受限 SQL 函数访问，不使业务角色获得全局表 SELECT 权限。
 
-- [ ] 写 `test_phone_normalization`、`test_identity_database_privileges`、`test_member_projection_scope` 测试。关键断言：`normalize_phone(' 0086 138-0000-0001 ') == '+8613800000001'`；`+86` 等价输入得到同一身份；非法号码 400；app 直接 SELECT 密码列报 InsufficientPrivilege；投影不含 password；无当前机构／普通医生不能探测或建立全局身份。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_login_identity.py -q`。预期：缺少模型／函数导致失败；环境连接失败不算预期红灯。
-- [ ] 新增 LoginIdentity（姓名、规范化 phone 唯一、密码、is_active、must_change_password、revision、created_at）、可空 Account.identity_id 及同身份同机构唯一约束、平台身份部分唯一约束；新增 LoginSessionContext。成员上下文中的 active_account 必须属于该 identity，以数据库触发器验证；历史空 identity 暂留，最终写入约束在任务 9 开启。
-- [ ] 实现限定函数：`vispect_ensure_identity(actor_id uuid, phone text, password_hash text, name text)` 返回 id／created；`vispect_probe_identity(actor_id uuid, phone text)` 仅返回 registered；`vispect_member_phone(actor_id uuid, account_id uuid)` 仅返回当前机构获准成员的手机号；`vispect_identity_workspaces(identity_id uuid)` 仅向 control 返回该身份成员元数据。固定 search_path、PUBLIC 无执行权限、app／control 分别最小授予；复用已有身份不更新任何凭据。注意 SECURITY DEFINER 本身不能绕过 FORCE RLS：为 owner 的成员投影增加仅限 accounts_account、identity_id 匹配事务身份变量的读取策略；成员投影函数和会话成员归属校验触发器临时设置该变量，并在正常／异常路径恢复原值。此策略不授予 app／control，也不扩展到临床表；投影函数仅 control 可执行，identity_id 只从已认证 Principal 取得。内部 username 为不承载登录意义的唯一生成值。
-- [ ] 同一手机号码并发插入通过唯一约束和冲突重读收敛；凭据加密在 Python 使用 Django，数据库不接收明文密码。函数由 caller 事务调用，不自行提交，也不通过另一个连接重试；避免“先查不存在，再插入”的竞争覆盖。
-- [ ] 重跑本任务测试并检查迁移漂移，预期全部通过。提交：`基础：增加统一手机号身份和受限成员查询`。
+- [x] 写 `test_phone_normalization`、`test_identity_database_privileges`、`test_member_projection_scope` 测试。关键断言：`normalize_phone(' 0086 138-0000-0001 ') == '+8613800000001'`；`+86` 等价输入得到同一身份；非法号码 400；app 直接 SELECT 密码列报 InsufficientPrivilege；投影不含 password；无当前机构／普通医生不能探测或建立全局身份。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_login_identity.py -q`。预期：缺少模型／函数导致失败；环境连接失败不算预期红灯。
+- [x] 新增 LoginIdentity（姓名、规范化 phone 唯一、密码、is_active、must_change_password、revision、created_at）、可空 Account.identity_id 及同身份同机构唯一约束、平台身份部分唯一约束；新增 LoginSessionContext。成员上下文中的 active_account 必须属于该 identity，以数据库触发器验证；历史空 identity 暂留，最终写入约束在任务 9 开启。
+- [x] 实现限定函数：`vispect_ensure_identity(actor_id uuid, phone text, password_hash text, name text)` 返回 id／created；`vispect_probe_identity(actor_id uuid, phone text)` 仅返回 registered；`vispect_member_phone(actor_id uuid, account_id uuid)` 仅返回当前机构获准成员的手机号；`vispect_identity_workspaces(identity_id uuid)` 仅向 control 返回该身份成员元数据。固定 search_path、PUBLIC 无执行权限、app／control 分别最小授予；复用已有身份不更新任何凭据。注意 SECURITY DEFINER 本身不能绕过 FORCE RLS：为 owner 的成员投影增加仅限 accounts_account、identity_id 匹配事务身份变量的读取策略；成员投影函数和会话成员归属校验触发器临时设置该变量，并在正常／异常路径恢复原值。此策略不授予 app／control，也不扩展到临床表；投影函数仅 control 可执行，identity_id 只从已认证 Principal 取得。内部 username 为不承载登录意义的唯一生成值。
+- [x] 同一手机号码并发插入通过唯一约束和冲突重读收敛；凭据加密在 Python 使用 Django，数据库不接收明文密码。函数由 caller 事务调用，不自行提交，也不通过另一个连接重试；避免“先查不存在，再插入”的竞争覆盖。
+- [x] 重跑本任务测试并检查迁移漂移，预期全部通过。提交：`基础：增加统一手机号身份和受限成员查询`。
 
 ### Task 2: 可预检、原子及幂等的旧账号迁移
 

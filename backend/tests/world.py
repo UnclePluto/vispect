@@ -103,3 +103,13 @@ class TestWorld:
         with tenant_transaction(a.tenant_id):
             v=e.current_visit;b=v.stage.bindings.select_related('form_version__form').first()
         return e,v,b
+
+    def bind_identity(self,account,phone,password=None):
+        from apps.accounts.models import LoginIdentity
+        from apps.accounts.phone import normalize_phone
+        identity=LoginIdentity.objects.using('migration').filter(phone=normalize_phone(phone)).first()
+        if identity is None:
+            identity=LoginIdentity(phone=normalize_phone(phone),name=account.name,must_change_password=False)
+            identity.set_password(password or self.password);identity.save(using='migration')
+        account.identity=identity;self.owner_save(account)
+        return identity
