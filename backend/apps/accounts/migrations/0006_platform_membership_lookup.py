@@ -5,7 +5,7 @@ RETURNS TABLE(account_id uuid,role text)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
 DECLARE previous text := current_setting('vispect.identity_id',true);
 BEGIN
- IF session_user NOT IN ('vispect_control','vispect_owner') OR NOT EXISTS(SELECT 1 FROM public.accounts_account WHERE id=p_actor AND role='platform_admin' AND is_active AND tenant_id IS NULL) THEN
+ IF session_user NOT IN ('vispect_control','vispect_owner') OR NOT EXISTS(SELECT 1 FROM public.accounts_account actor WHERE actor.id=p_actor AND actor.role='platform_admin' AND actor.is_active AND actor.tenant_id IS NULL) THEN
   RAISE EXCEPTION 'platform permission denied' USING ERRCODE='42501';
  END IF;
  PERFORM set_config('vispect.identity_id',p_identity::text,true);
