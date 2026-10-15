@@ -82,3 +82,22 @@ test.each([['change_password','修改初始密码'],['choose_workspace','请选�
  await userEvent.type(screen.getByLabelText('手机号'),'13900002001');await userEvent.type(screen.getByLabelText('密码'),'Password-2026!');
  await userEvent.click(screen.getByRole('button',{name:/登\s*录/}));expect(await screen.findByText(destination)).toBeInTheDocument();
 });
+test('无广播时迟到的成功查询核验权威空间后丢弃',async()=>{
+ let release!:()=>void,started!:()=>void,changed=false;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>started=r);
+ server.use(http.get('*/api/auth/me/',()=>HttpResponse.json(changed?{...envelope({...identity,name:'乙机构医生',tenant_id:'tenant-b'}),workspace_token:'token-b'}:envelope())),http.get('*/api/delayed-patients/',async()=>{started();await gate;return HttpResponse.json({name:'旧机构患者'})}));
+ readyRender(<Probe/>);await screen.findByText('甲机构管理员');const pending=api('/api/delayed-patients/').then(()=>null,e=>e);await ready;let error:unknown;await act(async()=>{changed=true;release();error=await pending});expect((error as {code?:string})?.code).toBe('request_cancelled');expect(await screen.findByText('乙机构医生')).toBeInTheDocument();
+});
+test('无广播时迟到的成功下载不得落盘',async()=>{
+ let release!:()=>void,started!:()=>void,changed=false;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>started=r);
+ server.use(http.get('*/api/auth/me/',()=>HttpResponse.json(changed?{...envelope({...identity,name:'乙机构医生',tenant_id:'tenant-b'}),workspace_token:'token-b'}:envelope())),http.get('*/api/delayed-export/',async()=>{started();await gate;return new HttpResponse('old spreadsheet',{headers:{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}})}));
+ const original=URL.createObjectURL;URL.createObjectURL=vi.fn(()=> 'blob:test');const click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ try{readyRender(<Probe/>);await screen.findByText('甲机构管理员');const pending=download('/api/delayed-export/','old.xlsx').then(()=>null,e=>e);await ready;let error:unknown;await act(async()=>{changed=true;release();error=await pending});expect((error as {code?:string})?.code).toBe('request_cancelled');expect(click).not.toHaveBeenCalled();await screen.findByText('乙机构医生');}finally{URL.createObjectURL=original;click.mockRestore()}
+});
+test('切换进行中阻止新的业务写入，失败后恢复操作',async()=>{
+ let release!:()=>void,started!:()=>void,writes=0;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>started=r);
+ server.use(http.post('*/api/auth/switch-workspace/',async()=>{started();await gate;return HttpResponse.json({code:'object_unavailable',message:'机构不可用',fields:{}},{status:404})}),http.post('*/api/new-write/',()=>{writes++;return HttpResponse.json({saved:true})}));
+ function Switch(){const auth=useAuth();return <><Probe/><span>{auth.switching?'正在切换':'可操作'}</span><button onClick={()=>void auth.switchWorkspace('b').catch(()=>{})}>发起切换</button></>}
+ readyRender(<Switch/>);await screen.findByText('甲机构管理员');await userEvent.click(screen.getByText('发起切换'));await ready;
+ try{const error=await api('/api/new-write/',{method:'POST',body:{}}).then(()=>null,e=>e);expect(error?.code).toBe('request_cancelled');expect(writes).toBe(0)}finally{release()}
+ await screen.findByText('可操作');expect(await api('/api/new-write/',{method:'POST',body:{}})).toEqual({saved:true});expect(writes).toBe(1);
+});

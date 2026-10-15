@@ -41,3 +41,18 @@ test('停用 B 成员后统一身份仍能进入 A',async({page,browser},testInf
  await choose(page,page.getByRole('combobox',{name:'当前机构'}),'示例健康机构 A');await page.waitForURL('/dashboard');await expect(page.getByText('机构审计',{exact:true})).toBeVisible();
  const after=(await (await helper.get(admin.request,`/api/doctors/${doctor.id}/`)).json());expect((await helper.post(admin.request,`/api/doctors/${doctor.id}/enabled/`,{enabled:true,expected_revision:after.revision})).status()).toBe(200);await context.close();
 });
+
+test('无广播且旧导出已获准时，迟到成功响应仍不能下载',async({page,context})=>{
+ await login(page,'demo-a','admin');const old=await context.newPage();await old.addInitScript(()=>{Object.defineProperty(window,'BroadcastChannel',{value:undefined})});await old.goto('/studies');await old.getByRole('button',{name:'生活方式观察研究',exact:true}).click();await old.getByRole('tab',{name:'研究答案'}).click();
+ let release!:()=>void,generated!:()=>void;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>generated=r);let downloads=0;old.on('download',()=>downloads++);
+ await old.route('**/api/studies/*/export/',async route=>{const response=await route.fetch();expect(response.status()).toBe(200);generated();await gate;await route.fulfill({response})});
+ await old.getByRole('button',{name:'导出获授权答案'}).click();await ready;
+ const committed=page.waitForResponse(r=>r.url().endsWith('/api/auth/switch-workspace/')&&r.request().method()==='POST');await choose(page,page.getByRole('combobox',{name:'当前机构'}),'示例健康机构 B');expect((await committed).status()).toBe(200);release();
+ await expect(old.getByText('我的资料',{exact:true})).toBeVisible();await expect(old.getByText('机构已在其他页面切换，未保存内容未提交')).toBeVisible();expect(downloads).toBe(0);await expect(old.getByRole('button',{name:'导出获授权答案'})).toHaveCount(0);
+});
+
+test('机构切换失败后保留表单设计草稿',async({page})=>{
+ await login(page,'demo-a','admin');await page.goto('/forms');await page.getByRole('button',{name:'新建表单'}).click();await page.getByLabel('表单名称').fill('切换失败必须保留的草稿');
+ await page.route('**/api/auth/switch-workspace/',route=>route.fulfill({status:404,contentType:'application/json',body:JSON.stringify({code:'object_unavailable',message:'目标机构成员已撤销',fields:{}})}));
+ await choose(page,page.getByRole('combobox',{name:'当前机构'}),'示例健康机构 B');await page.getByRole('button',{name:'放弃修改并切换'}).click();await expect(page.getByText('目标机构成员已撤销')).toBeVisible();await expect(page.getByLabel('表单名称')).toHaveValue('切换失败必须保留的草稿');await expect(page.getByText('有未保存修改',{exact:true})).toBeVisible();await expect(page.getByText('机构审计',{exact:true})).toBeVisible();
+});

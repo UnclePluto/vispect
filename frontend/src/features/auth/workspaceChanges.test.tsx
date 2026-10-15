@@ -1,6 +1,8 @@
 import {act,render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {useState} from 'react';
+import {MemoryRouter,Routes,Route} from 'react-router-dom';
+import {AuthGate} from './AuthGate';
 import {App as AntApp} from 'antd';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 import {http,HttpResponse} from 'msw';
@@ -14,7 +16,7 @@ const envelope={user:{id:'u',phone:'+8613900000001',name:'用户',must_change_pa
 const server=setupServer(http.get('*/api/auth/me/',()=>HttpResponse.json(envelope)),http.get('*/api/auth/csrf/',()=>HttpResponse.json({csrf_token:'csrf'})),http.post('*/api/auth/switch-workspace/',()=>{calls++;return HttpResponse.json({...envelope,workspace_token:'token-b',actor:{...actor,name:'乙医生'}})}));
 beforeAll(()=>server.listen({onUnhandledRequest:'error'}));afterEach(()=>{server.resetHandlers();calls=0});afterAll(()=>server.close());
 function Editor(){const [text,setText]=useState('');useWorkspaceDirty('editor',!!text);return <input aria-label="草稿" value={text} onChange={e=>setText(e.target.value)}/>}
-function Probe(){const auth=useAuth();return <><span>{auth.actor?.name}</span><Editor key={auth.workspaceToken}/><button onClick={()=>void auth.switchWorkspace('b')}>切换机构</button></>}
+function Probe(){const auth=useAuth();return <><span>{auth.actor?.name}</span><Editor key={auth.workspaceToken}/><button onClick={()=>void auth.switchWorkspace('b').catch(()=>{})}>切换机构</button></>}
 function wrap(children:React.ReactNode){return <QueryClientProvider client={new QueryClient()}><AntApp><WorkspaceChangesProvider><AuthProvider>{children}</AuthProvider></WorkspaceChangesProvider></AntApp></QueryClientProvider>}
 test('未保存时取消切换保留输入，确认后只调用一次并清理',async()=>{
  render(wrap(<Probe/>));await screen.findByText('甲管理员');await userEvent.type(screen.getByLabelText('草稿'),'未保存内容');await userEvent.click(screen.getByText('切换机构'));
@@ -30,4 +32,10 @@ test('其他标签页切换会清理旧编辑内容，不出现阻止切换的�
  class Channel {set onmessage(fn:typeof listener){listener=fn}close(){}postMessage(){}}
  const previous=window.BroadcastChannel;window.BroadcastChannel=Channel as unknown as typeof BroadcastChannel;
  try{render(wrap(<Probe/>));await screen.findByText('甲管理员');await userEvent.type(screen.getByLabelText('草稿'),'旧机构修改');server.use(http.get('*/api/auth/me/',()=>HttpResponse.json({...envelope,workspace_token:'token-b',actor:{...actor,name:'乙医生'}})));await act(async()=>listener?.({data:{type:'workspace_changed'}}));await screen.findByText('乙医生');expect(screen.getByLabelText('草稿')).toHaveValue('');expect(await screen.findByText('机构已在其他页面切换，未保存内容未提交')).toBeInTheDocument();expect(screen.queryByRole('dialog',{name:'有未保存的修改，是否切换机构？'})).not.toBeInTheDocument();}finally{window.BroadcastChannel=previous}
+});
+
+test('真实路由门控下切换失败仍保留原空间草稿',async()=>{
+ let release!:()=>void,started!:()=>void;const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>started=r);
+ server.use(http.post('*/api/auth/switch-workspace/',async()=>{started();await gate;return HttpResponse.json({code:'object_unavailable',message:'目标成员已撤销',fields:{}},{status:404})}));
+ render(wrap(<MemoryRouter><Routes><Route element={<AuthGate/>}><Route path="/" element={<Probe/>}/></Route></Routes></MemoryRouter>));await screen.findByText('甲管理员');await userEvent.type(screen.getByLabelText('草稿'),'必须保留的编辑');await userEvent.click(screen.getByText('切换机构'));await userEvent.click(await screen.findByRole('button',{name:'放弃修改并切换'}));await act(async()=>{await ready});const stayedMounted=!!screen.queryByLabelText('草稿');release();await waitFor(()=>expect(screen.queryByRole('dialog')).not.toBeInTheDocument());expect(await screen.findByText('甲管理员')).toBeInTheDocument();expect(stayedMounted).toBe(true);expect(screen.getByLabelText('草稿')).toHaveValue('必须保留的编辑');
 });

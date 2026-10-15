@@ -13,14 +13,14 @@ const FormsPage=lazy(()=>import('../features/forms/FormsPage').then(module=>({de
 const PatientsPage=lazy(()=>import('../features/patients/PatientsPage').then(module=>({default:module.PatientsPage})));
 import {createBrowserRouter,Navigate,Outlet} from 'react-router-dom';
 import {Spin,Result} from 'antd';
-import {useAuth,authDestination} from '../features/auth/AuthProvider';
+import {useAuth} from '../features/auth/AuthProvider';
+import {AuthGate} from '../features/auth/AuthGate';
 import {WorkspaceSelectPage} from '../features/auth/WorkspaceSelectPage';
 const LoginPage=lazy(()=>import('../features/auth/LoginPage').then(module=>({default:module.LoginPage})));
 const ChangePasswordPage=lazy(()=>import('../features/auth/ChangePasswordPage').then(module=>({default:module.ChangePasswordPage})));
 import {AdminLayout} from './AdminLayout';
 const DoctorsPage=lazy(()=>import('../features/doctors/DoctorsPage').then(module=>({default:module.DoctorsPage})));
 const TenantsPage=lazy(()=>import('../features/tenants/TenantsPage').then(module=>({default:module.TenantsPage})));
-function AuthGate(){const {user,actor,next,loading}=useAuth();if(loading)return <div className="full-spin"><Spin size="large"/></div>;if(!user)return <Navigate to="/login" replace/>;if(next!=='ready'||!actor)return <Navigate to={authDestination(next)} replace/>;return <Outlet/>}
 function RoleGate({platform}:{platform:boolean}){const {actor}=useAuth();return (actor?.role==='platform_admin')===platform?<Outlet/>:<Result status="403" title="当前身份没有此页面权限"/>}
 function TenantAdminGate(){const {actor}=useAuth();return actor?.role==='tenant_admin'?<Outlet/>:<Result status="403" title="此页面仅机构管理员可访问"/>}
 function Home(){const {actor}=useAuth();return <Navigate to={actor?.role==='platform_admin'?'/tenants':'/dashboard'} replace/>}
