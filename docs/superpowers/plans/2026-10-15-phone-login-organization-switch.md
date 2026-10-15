@@ -148,12 +148,12 @@
 
 **接口：** 前端使用固定 AuthEnvelope；AuthProvider 导出 user、actor、next、workspaces、workspaceToken、`login({phone,password})`、`switchWorkspace(accountId)`、logout、refreshIdentity。路由 `/select-workspace` 为 Principal 可访问，无 Actor 时不能进入业务路由。顶部和选择页调用同一切换方法。
 
-- [ ] 写“手机号登录按 next 导航”“选择机构更新角色与菜单”组件测试：登录没有用户名／机构标识；三个 next 分别进入改密／选择／首页；单机构自动进入；多机构选项含角色和重名辅助编号。切换 A 管理员→B 医生后更新菜单，平台项不产生机构权限。
-- [ ] 写“等待 CSRF 时切换取消旧写入”“迟到响应不能覆盖新空间”“空间撤销不退出统一身份”测试：API 与 download 捕获发起时 token；等待 CSRF 时发生切换则旧写入取消；旧 401／旧下载响应不能覆盖新身份；workspace_changed 刷新服务端上下文，workspace_unavailable 保留 user 并进入选择页；不能只改 localStorage 获得 Actor。
-- [ ] 运行 `pnpm --dir frontend test --run src/features/auth/auth.test.tsx`，预期新页面／接口缺失或旧登录表单断言失败。
-- [ ] 实现手机号登录、选择页和 Ant Design Select；登录成功后根据 next 导航。请求封装统一附加 `X-Workspace-Token`，认证恢复请求不附错误业务令牌；切换前增加请求代次并取消查询，成功后清空缓存、替换 Actor 并返回首页。失败先刷新权威上下文：未变则保留原空间，已变则应用新空间，不能对不确定网络结果盲目保留旧 Actor。
-- [ ] BroadcastChannel 只发送“空间已变化”的事件，不在广播中传递密码或可信授权数据；接收时先阻止旧操作并从 me 重新加载。不依赖广播保证服务端安全。以 workspace_token 为业务 Outlet 的 key，使旧机构局部状态卸载。
-- [ ] 运行上述测试、`pnpm --dir frontend typecheck`、`pnpm --dir frontend build`，预期通过。提交：`界面：统一手机号登录和顶部机构选择`。
+- [x] 写“手机号登录按 next 导航”“选择机构更新角色与菜单”组件测试：登录没有用户名／机构标识；三个 next 分别进入改密／选择／首页；单机构自动进入；多机构选项含角色和重名辅助编号。切换 A 管理员→B 医生后更新菜单，平台项不产生机构权限。
+- [x] 写“等待 CSRF 时切换取消旧写入”“迟到响应不能覆盖新空间”“空间撤销不退出统一身份”测试：API 与 download 捕获发起时 token；等待 CSRF 时发生切换则旧写入取消；旧 401／旧下载响应不能覆盖新身份；workspace_changed 刷新服务端上下文，workspace_unavailable 保留 user 并进入选择页；不能只改 localStorage 获得 Actor。
+- [x] 运行 `pnpm --dir frontend test --run src/features/auth/auth.test.tsx`，预期新页面／接口缺失或旧登录表单断言失败。
+- [x] 实现手机号登录、选择页和 Ant Design Select；登录成功后根据 next 导航。请求封装统一附加 `X-Workspace-Token`，认证恢复请求不附错误业务令牌；切换前增加请求代次并取消查询，成功后清空缓存、替换 Actor 并返回首页。失败先刷新权威上下文：未变则保留原空间，已变则应用新空间，不能对不确定网络结果盲目保留旧 Actor。
+- [x] BroadcastChannel 只发送“空间已变化”的事件，不在广播中传递密码或可信授权数据；接收时先阻止旧操作并从 me 重新加载。不依赖广播保证服务端安全。以 workspace_token 为业务 Outlet 的 key，使旧机构局部状态卸载。
+- [x] 运行上述测试、`pnpm --dir frontend typecheck`、`pnpm --dir frontend build`，预期通过。提交：`界面：统一手机号登录和顶部机构选择`。
 
 ### Task 8: 未保存内容登记及机构切换确认
 
