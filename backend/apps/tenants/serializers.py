@@ -11,16 +11,17 @@ class TenantWriteSerializer(serializers.Serializer):
     name=serializers.CharField(max_length=200)
     enabled=serializers.BooleanField(required=False)
     limits=LimitsSerializer(required=False)
-    admin_username=serializers.CharField(max_length=150,required=False)
-    admin_password=serializers.CharField(trim_whitespace=False,required=False,write_only=True)
+    admin_phone=serializers.CharField(max_length=40,required=False)
+    admin_initial_password=serializers.CharField(trim_whitespace=False,required=False,write_only=True)
     expected_revision=serializers.IntegerField(min_value=1,required=False)
 
 class AdministratorSerializer(serializers.Serializer):
-    username=serializers.CharField(max_length=150)
+    phone=serializers.CharField(max_length=40)
     name=serializers.CharField(max_length=200)
-    password=serializers.CharField(trim_whitespace=False,required=False,write_only=True,allow_blank=True)
+    initial_password=serializers.CharField(trim_whitespace=False,required=False,write_only=True,allow_blank=True)
     enabled=serializers.BooleanField(required=False)
-    expected_revision=serializers.IntegerField(min_value=1)
+    expected_tenant_revision=serializers.IntegerField(min_value=1)
+    expected_admin_id=serializers.UUIDField(allow_null=True)
 
 def tenant_payload(tenant):
     quota=tenant.quota

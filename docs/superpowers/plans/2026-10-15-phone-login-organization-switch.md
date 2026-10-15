@@ -136,11 +136,11 @@
 
 **接口：** 机构创建改用 `admin_phone` 与仅新身份需要的 `admin_initial_password`。`configure_administrator(actor, tenant_id, data)` 以 `expected_tenant_revision` 和 `expected_admin_id` 防并发，后者在没有启用管理员时为 null；手机号不同即更换操作者，不改绑旧 Account。管理员查询返回 `{tenant_revision, administrator: AccountPayload | null}`，每次配置都递增机构与所改成员的修订号，不把成员修订号与机构修订号混用。新增 GET `/api/platform/accounts/?phone=...` 精确查询，POST `/api/platform/accounts/{id}/enabled/`（enabled、expected_revision），POST `/api/platform/accounts/{id}/reset-password/`（new_password、expected_revision）；缺失或非法 phone 返回 400，不返回全局账号大全；前端首次进入不发查询，填写合法号码后才请求。
 
-- [ ] 写 `test_global_account_admin_permissions`、`test_platform_reset_revokes_all_sessions` 和 `test_global_revision_conflict`：机构管理员／医生请求全局管理接口 403；平台重置撤销全部旧会话、首次改密为 true，临床请求仍 403；全局停用影响所有机构，成员停用只影响当前机构；旧 revision 返回 409。
-- [ ] 写 `test_replace_admin_preserves_historical_actor`、`test_existing_doctor_not_promoted_implicitly` 和 `test_create_organization_rolls_back_identity`：新旧手机号不同，当前管理员 Account ID 改变，旧历史 AuditEvent.actor_id 不变且仍指旧 identity；旧关系停用，其他机构关系不变；目标已是本机构医生则冲突，不能隐式提权。创建机构中途失败时新身份／成员／机构／配额整体回滚。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_global_accounts.py -q`，预期新接口／旧管理员更新方式导致失败。
-- [ ] 平台操作保持一个 control 事务，使用受限身份函数关联凭据；事务内锁定机构和当前管理员，唯一选择当前启用管理员，不能继续按最早历史管理员行决定当前人选。更换时创建或复用目标管理员关系，并停用旧关系；如果没有启用管理员，明确返回待配置状态，使用机构 revision 及 expected_admin_id=null 控制补配。
-- [ ] 全局重置／启用审计使用当前平台 Account，隐藏密码和认证哈希，不把 LoginIdentity ID 当作临床审计 actor。运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_global_accounts.py backend/tests/test_tenants.py backend/tests/test_audit.py -q`，预期通过。提交：`平台：管理全局账号并保留管理员历史身份`。
+- [x] 写 `test_global_account_admin_permissions`、`test_platform_reset_revokes_all_sessions` 和 `test_global_revision_conflict`：机构管理员／医生请求全局管理接口 403；平台重置撤销全部旧会话、首次改密为 true，临床请求仍 403；全局停用影响所有机构，成员停用只影响当前机构；旧 revision 返回 409。
+- [x] 写 `test_replace_admin_preserves_historical_actor`、`test_existing_doctor_not_promoted_implicitly` 和 `test_create_organization_rolls_back_identity`：新旧手机号不同，当前管理员 Account ID 改变，旧历史 AuditEvent.actor_id 不变且仍指旧 identity；旧关系停用，其他机构关系不变；目标已是本机构医生则冲突，不能隐式提权。创建机构中途失败时新身份／成员／机构／配额整体回滚。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_global_accounts.py -q`，预期新接口／旧管理员更新方式导致失败。
+- [x] 平台操作保持一个 control 事务，使用受限身份函数关联凭据；事务内锁定机构和当前管理员，唯一选择当前启用管理员，不能继续按最早历史管理员行决定当前人选。更换时创建或复用目标管理员关系，并停用旧关系；如果没有启用管理员，明确返回待配置状态，使用机构 revision 及 expected_admin_id=null 控制补配。
+- [x] 全局重置／启用审计使用当前平台 Account，隐藏密码和认证哈希，不把 LoginIdentity ID 当作临床审计 actor。运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_global_accounts.py backend/tests/test_tenants.py backend/tests/test_audit.py -q`，预期通过。提交：`平台：管理全局账号并保留管理员历史身份`。
 
 ### Task 7: 前端认证状态机、请求封装与机构选择
 
@@ -169,7 +169,7 @@
 
 ### Task 9: 手机号管理界面、机构文案与旧入口退役
 
-**文件：** 新建 `frontend/src/features/accounts/{GlobalAccountsPage.tsx,api.ts,accounts.test.tsx}`；修改 `features/{doctors,tenants}/` 的编辑器／列表／API／测试，AdminLayout、router，后端 auth 路由／中间件及 `accounts/migrations/0006_identity_cutover.py`，`backend/tests/test_auth.py`、已有 fixture 和成员测试。
+**文件：** 新建 `frontend/src/features/accounts/{GlobalAccountsPage.tsx,api.ts,accounts.test.tsx}`；修改 `features/{doctors,tenants}/` 的编辑器／列表／API／测试，AdminLayout、router，后端 auth 路由／中间件及 `accounts/migrations/0007_identity_cutover.py`，`backend/tests/test_auth.py`、已有 fixture 和成员测试。
 
 **接口：** 新增前端 `/accounts` 平台专属页面；机构创建和管理员弹窗使用手机号、新用户初始密码、现有手机号保留原密码提示。探测状态失效时以保存响应为准，不依赖初始输入状态。
 

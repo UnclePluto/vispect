@@ -43,3 +43,6 @@ urlpatterns += [path('api/auth/switch-workspace/',SwitchWorkspaceView.as_view())
 
 from apps.accounts.member_lookup import PhoneStatusView
 urlpatterns += [path('api/members/phone-status/',PhoneStatusView.as_view())]
+
+from apps.accounts.platform_api import GlobalAccountsView,GlobalAccountActionView
+urlpatterns += [path('api/platform/accounts/',GlobalAccountsView.as_view()),path('api/platform/accounts/<uuid:identity_id>/enabled/',GlobalAccountActionView.as_view()),path('api/platform/accounts/<uuid:identity_id>/reset-password/',GlobalAccountActionView.as_view(reset=True))]

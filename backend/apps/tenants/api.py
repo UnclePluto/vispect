@@ -8,7 +8,7 @@ from apps.core.errors import ApiError
 from apps.core.pagination import paginate
 from .models import Tenant
 from .serializers import TenantWriteSerializer,AdministratorSerializer,tenant_payload
-from .services import create_tenant,update_tenant,configure_administrator
+from .services import create_tenant,update_tenant,configure_administrator,administrator_payload
 
 class TenantsView(APIView):
     def get(self,request):
@@ -34,16 +34,13 @@ class TenantDetailView(APIView):
 
 class AdministratorView(APIView):
     def get(self,request,tenant_id):
-        from apps.accounts.models import Account
-        require_role(current_actor(request),'platform_admin')
-        account=Account.objects.using('control').filter(tenant_id=tenant_id,role='tenant_admin').order_by('created_at').first()
-        if not account:raise ApiError('object_unavailable','管理员账号不可用',status=404)
-        return Response({'id':str(account.id),'username':account.username,'name':account.name,'enabled':account.is_active,'revision':account.revision})
+        actor=current_actor(request);require_role(actor,'platform_admin')
+        tenant=get_object(Tenant.objects.using('control'),tenant_id)
+        return Response(administrator_payload(actor,tenant))
     def patch(self,request,tenant_id):
         actor=current_actor(request);require_role(actor,'platform_admin')
         data=AdministratorSerializer(data=request.data);data.is_valid(raise_exception=True)
-        account=configure_administrator(actor,tenant_id,data.validated_data)
-        return Response({'id':str(account.id),'username':account.username,'name':account.name,'enabled':account.is_active,'revision':account.revision})
+        return Response(configure_administrator(actor,tenant_id,data.validated_data))
 
 class PlatformUsageView(APIView):
     def get(self,request):

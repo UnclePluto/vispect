@@ -7,7 +7,7 @@ def test_audit_only_allows_tenant_administrator(world):
 
 def test_platform_audit_only_contains_control_events(world):
     world.patient('a');client=world.login(None,'platform_admin')
-    response=world.post(client,'/api/platform/tenants/',{'slug':'audit-tenant','name':'平台审计机构','admin_username':'admin','admin_password':world.password,'limits':{'doctors':10,'patients':10,'studies':10}})
+    response=world.post(client,'/api/platform/tenants/',{'slug':'audit-tenant','name':'平台审计机构','admin_phone':'13813000004','admin_initial_password':world.password,'limits':{'doctors':10,'patients':10,'studies':10}})
     assert response.status_code==201
     data=client.get('/api/platform/audit/');assert data.status_code==200
     assert all(e['tenant_id'] is None for e in data.json()['results'])
