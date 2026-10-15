@@ -12,6 +12,7 @@ from apps.core.types import Actor
 class TestWorld:
     __test__=False
     password='World-Strong-Password-2026!'
+    phone_counter=0
     def __init__(self,create_identities=True):
         self.app_dsn=os.environ['DATABASE_URL']
         self.control_dsn=os.environ['CONTROL_DATABASE_URL']
@@ -89,8 +90,11 @@ class TestWorld:
 
     def doctor(self,tenant,**data):
         from apps.doctors.services import create_doctor
-        doctor=create_doctor(self.actor(tenant,'tenant_admin'),{'username':f'doctor-{uuid.uuid4().hex[:8]}','name':'新增测试医生','password':self.password,**data})
-        doctor.account.must_change_password=False;self.owner_save(doctor.account)
+        type(self).phone_counter+=1
+        data.pop('username',None)
+        doctor=create_doctor(self.actor(tenant,'tenant_admin'),{'login_phone':f'138{type(self).phone_counter:08d}','name':'新增测试医生','initial_password':self.password,**data})
+        from apps.accounts.models import LoginIdentity
+        LoginIdentity.objects.using('migration').filter(id=doctor.account.identity_id).update(must_change_password=False)
         return doctor
 
     def patient(self,tenant,**data):

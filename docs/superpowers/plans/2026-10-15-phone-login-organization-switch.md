@@ -123,12 +123,12 @@
 
 **接口：** `probe_login_phone(actor, phone) -> {phone, registered}`；POST `/api/members/phone-status/` 只供机构／平台管理员精确探测；`create_doctor(actor, data)` 改用 `login_phone`、新身份的 `initial_password`、姓名及原资料字段。返回 payload 增加 login_phone；原 phone 是联系方式，不作为身份绑定输入。
 
-- [ ] 写 `test_add_existing_phone_preserves_global_credentials` 及 `test_duplicate_or_deleted_member_not_recreated`：全局密码哈希、A 成员角色／状态和全局修订号不变；只增加 B 的医生档案与额度，医生不能调用探测接口，结果不含其他机构元数据。重复成员明确冲突；软删除档案提示使用恢复，不新建第二份。
-- [ ] 写 `test_concurrent_phone_provisioning` 和 `test_member_failure_rolls_back_identity_and_doctor`：两机构同时创建相同手机、不同初始密码，只有一个身份，第二个调用不覆盖成功者密码；并发测试在 ensure_identity 执行前用线程事件同步，在固定顺序锁定号码后验证收敛，不用耗时推断。满额、Doctor 创建失败、审计失败后本次新身份／Account／Doctor 均不保留。测试使用真实数据库独立连接。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_members.py -q`，预期用户名旧接口／缺少原子性导致失败。
-- [ ] 保留 `mutate_with_quota`，在同一 default 事务里调用任务 1 ensure_identity、建立 Account、Doctor 和审计；现有手机号忽略而不应用 initial_password，未注册手机号缺密码返回 400。手机号归一与最终写入判断不能只依赖探测结果。账号 is_active 仅影响成员；删除／恢复仍遵守原保护和额度规则。
-- [ ] 拒绝机构管理员在普通医生接口修改 identity_id、role、全局密码或登录手机号；普通医生的资料权限保持原状。更新 world.doctor 为新字段，新增手机使用唯一测试计数，不随机碰撞真实业务库。
-- [ ] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_members.py backend/tests/test_doctors.py backend/tests/test_quota.py backend/tests/test_recycle.py -q`，预期通过。提交：`成员：通过手机号建立独立机构医生身份`。
+- [x] 写 `test_add_existing_phone_preserves_global_credentials` 及 `test_duplicate_or_deleted_member_not_recreated`：全局密码哈希、A 成员角色／状态和全局修订号不变；只增加 B 的医生档案与额度，医生不能调用探测接口，结果不含其他机构元数据。重复成员明确冲突；软删除档案提示使用恢复，不新建第二份。
+- [x] 写 `test_concurrent_phone_provisioning` 和 `test_member_failure_rolls_back_identity_and_doctor`：两机构同时创建相同手机、不同初始密码，只有一个身份，第二个调用不覆盖成功者密码；并发测试在 ensure_identity 执行前用线程事件同步，在固定顺序锁定号码后验证收敛，不用耗时推断。满额、Doctor 创建失败、审计失败后本次新身份／Account／Doctor 均不保留。测试使用真实数据库独立连接。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_members.py -q`，预期用户名旧接口／缺少原子性导致失败。
+- [x] 保留 `mutate_with_quota`，在同一 default 事务里调用任务 1 ensure_identity、建立 Account、Doctor 和审计；现有手机号忽略而不应用 initial_password，未注册手机号缺密码返回 400。手机号归一与最终写入判断不能只依赖探测结果。账号 is_active 仅影响成员；删除／恢复仍遵守原保护和额度规则。
+- [x] 拒绝机构管理员在普通医生接口修改 identity_id、role、全局密码或登录手机号；普通医生的资料权限保持原状。更新 world.doctor 为新字段，新增手机使用唯一测试计数，不随机碰撞真实业务库。
+- [x] 运行 `uv run --project backend --env-file .env --no-sync pytest backend/tests/test_phone_members.py backend/tests/test_doctors.py backend/tests/test_quota.py backend/tests/test_recycle.py -q`，预期通过。提交：`成员：通过手机号建立独立机构医生身份`。
 
 ### Task 6: 机构管理员更换与平台全局账号管理
 

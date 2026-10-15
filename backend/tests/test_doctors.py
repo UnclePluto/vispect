@@ -7,7 +7,7 @@ from apps.core.errors import ApiError
 
 def test_tenant_admin_can_create_doctor_with_chinese_name(world):
     client=world.login('a','tenant_admin')
-    response=world.post(client,'/api/doctors/',{'username':'zhang','password':world.password,'name':'  张  医生  ','phone':'13800000000','organization':'测试医院','department':'全科','title':'主治医师'})
+    response=world.post(client,'/api/doctors/',{'login_phone':'13811000001','initial_password':world.password,'name':'  张  医生  ','phone':'13800000000','organization':'测试医院','department':'全科','title':'主治医师'})
     assert response.status_code == 201,response.content
     assert response.json()['name'] == '张  医生'
     assert 'password' not in response.json()
@@ -20,15 +20,15 @@ def test_last_doctor_slot_is_atomic(world):
     assert quota.doctors_used == 2
     quota.doctors_limit=3;world.owner_save(quota)
     actor=world.actor('a','tenant_admin')
-    def attempt(username):
+    def attempt(phone):
         try:
-            create_doctor(actor,{'username':username,'password':world.password,'name':username})
+            create_doctor(actor,{'login_phone':phone,'initial_password':world.password,'name':phone})
             return True
         except ApiError as exc:
             assert exc.code=='quota_exceeded'
             return False
         finally:connections.close_all()
-    with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(attempt,['candidate-a','candidate-b']))
+    with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(attempt,['13811000002','13811000003']))
     assert results.count(True) == 1
     assert TenantQuota.objects.using('migration').get(tenant=world.tenants['a']).doctors_used == 3
 
@@ -50,9 +50,9 @@ def test_database_failure_does_not_leave_account_or_consume_quota(world):
     from apps.accounts.models import Account
     from apps.tenants.models import TenantQuota
     with pytest.raises(DataError):
-        create_doctor(world.actor('a','tenant_admin'),{'username':'atomic-failure','password':world.password,'name':'失败医生','organization':'x'*201})
+        create_doctor(world.actor('a','tenant_admin'),{'login_phone':'13811000004','initial_password':world.password,'name':'失败医生','organization':'x'*201})
     with world.owner_context(world.tenants['a'].id):
-        assert not Account.objects.using('migration').filter(username='atomic-failure').exists()
+        assert not Account.objects.using('migration').filter(name='失败医生').exists()
     assert TenantQuota.objects.using('migration').get(tenant=world.tenants['a']).doctors_used == 1
 
 def test_direct_sql_cannot_exceed_quota(world):
@@ -90,12 +90,12 @@ def test_doctor_profile_and_account_use_same_tenant_constraint(world):
         with pytest.raises(psycopg.errors.ForeignKeyViolation):
             conn.execute('UPDATE doctors_doctor SET account_id=%s WHERE id=%s',[foreign.id,world.accounts['a','doctor'].doctor_id])
 
-def test_empty_password_preserves_existing_doctor_password(world):
+def test_member_cannot_change_global_password(world):
     client=world.login('a','tenant_admin');doctor_id=world.accounts['a','doctor'].doctor_id
     token=client.get('/api/auth/csrf/').json()['csrf_token']
     response=client.patch(f'/api/doctors/{doctor_id}/',{'name':'更新姓名','password':'','expected_revision':1},format='json',HTTP_X_CSRFTOKEN=token)
-    assert response.status_code == 200
-    assert world.login('a','doctor').get('/api/auth/me/').json()['name'] == '更新姓名'
+    assert response.status_code == 400
+    assert world.login('a','doctor',unified=True).get('/api/auth/me/').status_code == 200
 
 def test_quota_adjustment_and_creation_do_not_deadlock(world):
     from threading import Event
@@ -111,7 +111,7 @@ def test_quota_adjustment_and_creation_do_not_deadlock(world):
             return result
         try:
             with connections['default'].execute_wrapper(coordinate):
-                return create_doctor(world.actor('a','tenant_admin'),{'username':'concurrent-quota','name':'并发医生','password':world.password})
+                return create_doctor(world.actor('a','tenant_admin'),{'login_phone':'13811000005','name':'并发医生','initial_password':world.password})
         finally:connections.close_all()
     def adjust():
         def coordinate(execute,statement,params,many,context):

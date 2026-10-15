@@ -40,3 +40,6 @@ urlpatterns += [path('api/auth/login/',PhoneLoginView.as_view()),path('api/auth/
 
 from apps.accounts.auth_api import SwitchWorkspaceView
 urlpatterns += [path('api/auth/switch-workspace/',SwitchWorkspaceView.as_view())]
+
+from apps.accounts.member_lookup import PhoneStatusView
+urlpatterns += [path('api/members/phone-status/',PhoneStatusView.as_view())]
