@@ -22,7 +22,7 @@ def prepare_test_database(django_db_blocker):
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     module.provision_test_database(os.environ['MIGRATION_DATABASE_URL'],os.environ['DATABASE_URL'],os.environ['CONTROL_DATABASE_URL'])
     with psycopg.connect(os.environ['MIGRATION_DATABASE_URL'],autocommit=True) as conn:
-        tables=[r[0] for r in conn.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'") if r[0]=='django_session' or r[0].startswith(('tenants_','accounts_','core_','doctors_','patients_','forms_','studies_','followups_'))]
+        tables=[r[0] for r in conn.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'") if r[0]=='django_session' or r[0].startswith(('tenants_','accounts_','core_','doctors_','patients_','forms_','studies_','followups_','patient_portal_'))]
         if tables:conn.execute(sql.SQL('TRUNCATE {} CASCADE').format(sql.SQL(',').join(map(sql.Identifier,tables))))
     result=subprocess.run([sys.executable,'manage.py','migrate','--database','migration','--noinput'],cwd=backend,env=dict(os.environ,VISPECT_MANAGEMENT='1'),capture_output=True,text=True)
     if result.returncode:raise RuntimeError(result.stdout+result.stderr)
@@ -40,7 +40,7 @@ def world(runtime_database,request):
     from tests.world import TestWorld
     connections.close_all()
     with psycopg.connect(os.environ['MIGRATION_DATABASE_URL'],autocommit=True) as conn:
-        tables=[r[0] for r in conn.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'") if r[0]=='django_session' or r[0].startswith(('tenants_','accounts_','core_','doctors_','patients_','forms_','studies_','followups_'))]
+        tables=[r[0] for r in conn.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'") if r[0]=='django_session' or r[0].startswith(('tenants_','accounts_','core_','doctors_','patients_','forms_','studies_','followups_','patient_portal_'))]
         if tables:conn.execute(sql.SQL('TRUNCATE {} CASCADE').format(sql.SQL(',').join(map(sql.Identifier,tables))))
     result=TestWorld(create_identities=getattr(request,'param',True))
     yield result
