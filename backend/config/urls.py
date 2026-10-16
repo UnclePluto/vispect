@@ -46,3 +46,6 @@ urlpatterns += [path('api/members/phone-status/',PhoneStatusView.as_view())]
 
 from apps.accounts.platform_api import GlobalAccountsView,GlobalAccountActionView
 urlpatterns += [path('api/platform/accounts/',GlobalAccountsView.as_view()),path('api/platform/accounts/<uuid:identity_id>/enabled/',GlobalAccountActionView.as_view()),path('api/platform/accounts/<uuid:identity_id>/reset-password/',GlobalAccountActionView.as_view(reset=True))]
+
+from apps.patient_portal.staff_api import PatientAccessView
+urlpatterns += [path('api/patients/<uuid:patient_id>/portal-access/',PatientAccessView.as_view())]
