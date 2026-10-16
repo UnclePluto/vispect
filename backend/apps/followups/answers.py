@@ -1,4 +1,5 @@
 from .authorship import set_answer_recorder,stamp_answer_submission
+from .revision_policy import revision_policy
 from django.utils import timezone
 from apps.core.permissions import require_tenant
 from apps.core.helpers import get_object,ensure_revision
@@ -72,7 +73,10 @@ def revise_answer(actor,answer_id,answers,reason,expected_revision):
     require_tenant(actor)
     if not isinstance(reason,str) or not reason.strip() or len(reason)>10000:raise ApiError('revision_reason_required','修订必须填写有效原因',{'reason':['请填写修订原因']},400)
     def mutation():
-        visible=get_object(visible_answers(actor),answer_id);visit,e,study=locked_visit(actor,visible.visit_id);require_writable(visit,e,study)
+        visible=get_object(visible_answers(actor),answer_id);visit,e,study=locked_visit(actor,visible.visit_id)
+        visible.visit=visit;visit.enrollment=e;e.study=study
+        allowed,block_reason=revision_policy(actor,visible)
+        if not allowed:raise ApiError('answer_read_only',block_reason,status=409)
         binding=writable_binding(actor,visit,visible.binding_id);answer=get_object(visible_answers(actor),answer_id,True);ensure_revision(answer,expected_revision)
         if answer.status!='submitted':raise ApiError('answer_not_submitted','草稿请直接编辑保存')
         clean=evaluated(binding,answers,'submit')
