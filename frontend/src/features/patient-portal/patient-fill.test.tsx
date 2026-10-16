@@ -1,4 +1,4 @@
-import {render,screen,waitFor} from '@testing-library/react';
+import {render,screen,waitFor,within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {http,HttpResponse} from 'msw';
 import {setupServer} from 'msw/node';
@@ -41,9 +41,36 @@ test('未开放访视显示原因且不能提交',async()=>{
 
 import {act} from '@testing-library/react';
 import {focusManager} from '@tanstack/react-query';
+test.each(['choices','task'])('后台%s查询暂时失败时保留未保存输入，恢复后仍可填写',async(kind)=>{
+ render(<App/>);await userEvent.type(await screen.findByLabelText('健康情况'),'尚未保存的答案');
+ const failure=()=>HttpResponse.json({code:'temporary_failure',message:'查询暂时失败',fields:{}},{status:503});
+ server.use(kind==='choices'?http.post('*/api/patient/tasks/resolve/',failure):http.get('*/api/patient/entries/qr-fill/patients/:patient/',failure));
+ await act(async()=>{focusManager.setFocused(false);focusManager.setFocused(true)});
+ expect(await screen.findByText('查询暂时失败')).toBeVisible();expect(screen.getByLabelText('健康情况')).toHaveValue('尚未保存的答案');
+ server.resetHandlers();await userEvent.click(screen.getByRole('button',{name:'重试查询'}));
+ await waitFor(()=>expect(screen.queryByText('查询暂时失败')).not.toBeInTheDocument());expect(screen.getByLabelText('健康情况')).toHaveValue('尚未保存的答案');expect(screen.getByLabelText('健康情况')).toBeEnabled();
+});
+test.each(['choices','task'])('后台%s查询确认无权访问时清除受保护填写内容',async(kind)=>{
+ render(<App/>);await userEvent.type(await screen.findByLabelText('健康情况'),'受保护的答案');
+ const unavailable=()=>HttpResponse.json({code:'not_found',message:'填写任务已失效',fields:{}},{status:404});
+ server.use(kind==='choices'?http.post('*/api/patient/tasks/resolve/',unavailable):http.get('*/api/patient/entries/qr-fill/patients/:patient/',unavailable));
+ await act(async()=>{focusManager.setFocused(false);focusManager.setFocused(true)});
+ await screen.findByText('填写任务已失效');expect(screen.queryByLabelText('健康情况')).not.toBeInTheDocument();
+});
 test('患者提交后后台修订，刷新显示最新只读答案',async()=>{
  render(<App/>);await userEvent.type(await screen.findByLabelText('健康情况'),'患者初次答案');await confirmSubmit();await screen.findByText('填写已提交');
  answers.set('p1',{id:'answer-p1',revision:2,status:'submitted',submitted_at:'2026-10-16T08:00:00Z',answers:{q1:'医生核对后的答案'}});
  await act(async()=>{focusManager.setFocused(false);focusManager.setFocused(true)});
  await waitFor(()=>expect(screen.getByLabelText('健康情况')).toHaveValue('医生核对后的答案'));
+});
+test.each(['submitted','draft'] as const)('未保存时其他终端更新为%s，明确区分服务器记录与本机内容并要求核对',async(status)=>{
+ render(<App/>);await userEvent.type(await screen.findByLabelText('健康情况'),'本机未保存的答案');
+ answers.set('p1',{id:'answer-p1',revision:1,status,submitted_at:status==='submitted'?'2026-10-16T08:00:00Z':null,answers:{q1:'其他终端保存的答案'}});
+ await act(async()=>{focusManager.setFocused(false);focusManager.setFocused(true)});
+ expect(await screen.findByText('服务器记录已变化，当前输入仍保留，请核对后重新加载。')).toBeVisible();
+ const local=within(screen.getByRole('region',{name:'本机未保存内容'})),remote=within(screen.getByRole('region',{name:'服务器最新记录'}));
+ expect(local.getByLabelText('健康情况')).toHaveValue('本机未保存的答案');expect(remote.getByLabelText('健康情况')).toHaveValue('其他终端保存的答案');expect(screen.queryByText('填写已提交')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'提交答案'})).not.toBeInTheDocument();
+ await userEvent.click(screen.getByRole('button',{name:'重新加载'}));await userEvent.click(await screen.findByRole('button',{name:'保留输入'}));expect(local.getByLabelText('健康情况')).toHaveValue('本机未保存的答案');
+ await userEvent.click(screen.getByRole('button',{name:'重新加载'}));await userEvent.click(await screen.findByRole('button',{name:'放弃并重新加载'}));
+ await waitFor(()=>expect(screen.queryByRole('region',{name:'本机未保存内容'})).not.toBeInTheDocument());expect(screen.getByLabelText('健康情况')).toHaveValue('其他终端保存的答案');if(status==='submitted')expect(await screen.findByText('填写已提交')).toBeVisible();
 });

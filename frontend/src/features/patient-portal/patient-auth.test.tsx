@@ -34,6 +34,16 @@ test('患者退出后浏览器后退不会恢复旧患者内容',async()=>{
 });
 
 import {patientApi,setPatientSessionToken} from './client';
+test('退出失败明确提示且保留当前登录，重试确认撤销后才完成退出',async()=>{
+ auth={user:{id:'p',phone:'+8613800000001',must_change_password:false},next:'ready',session_token:'patient-two'};
+ let fail=true;
+ server.use(http.post('*/api/patient/auth/logout/',()=>{if(fail)return HttpResponse.json({code:'temporary_failure',message:'退出服务暂时失败',fields:{}},{status:503});auth=null;return HttpResponse.json({ok:true})}));
+ render(<App/>);await screen.findByText(/已登录/);await userEvent.click(screen.getByRole('button',{name:'退出登录'}));
+ expect(await screen.findByText('退出未成功，请重试')).toBeVisible();expect(screen.getByText(/已登录/)).toBeVisible();expect(screen.queryByLabelText('手机号')).not.toBeInTheDocument();
+ await act(async()=>{window.dispatchEvent(new Event('focus'));window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))});
+ await waitFor(()=>expect(screen.getByText(/已登录/)).toBeVisible());expect(screen.queryByLabelText('手机号')).not.toBeInTheDocument();
+ fail=false;await userEvent.click(screen.getByRole('button',{name:'退出登录'}));expect(await screen.findByLabelText('手机号')).toBeVisible();
+});
 test('患者请求不发送工作人员令牌，也不触发工作人员退出',async()=>{
  auth={user:{id:'p',phone:'+8613800000001',must_change_password:false},next:'ready',session_token:'header-token'};setPatientSessionToken('header-token');
  let staffExpired=0,workspaceHeader:string|null='not-observed',patientHeader:string|null=null;

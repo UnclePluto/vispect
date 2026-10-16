@@ -2,11 +2,12 @@ import {useEffect,useState} from 'react';
 import {Alert,App,Button,Empty,Spin} from 'antd';
 import {useBlocker,useParams} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
-import {errorMessage} from '../../api/client';
+import {ApiError,errorMessage} from '../../api/client';
 import {resolveTasks,getTask} from './api';
 import {usePatientAuth} from './PatientAuthProvider';
 import {PatientChoice} from './PatientChoice';
 import {PatientTaskForm} from './PatientTaskForm';
+function temporary(error:unknown){return !(error instanceof ApiError)||error.status>=500}
 export function PatientFillPage(){
  const {token}=useParams(),{modal}=App.useApp(),auth=usePatientAuth(),[selected,setSelected]=useState<string|null>(null),[dirty,setDirty]=useState(false),[reload,setReload]=useState(0),[error,setError]=useState('');
  const choices=useQuery({queryKey:['patient-tasks',token],queryFn:({signal})=>resolveTasks(token!,signal)});
@@ -19,11 +20,12 @@ export function PatientFillPage(){
  async function refresh(){const result=await task.refetch();if(result.error)throw result.error}
  async function reloadTask(){setError('');try{await refresh();setReload(n=>n+1);setDirty(false)}catch(e){setError(errorMessage(e))}}
  if(choices.isLoading)return <Spin/>;
- if(choices.error)return <Alert type="error" title={errorMessage(choices.error)}/>;
+ if(choices.error&&(!choices.data||!temporary(choices.error)))return <Alert type="error" title={errorMessage(choices.error)}/>;
  const items=choices.data?.results??[];
  if(!items.length)return <Empty description="暂无对应填写任务，请联系医生"/>;
  if(!selected)return <PatientChoice choices={items} onSelect={setSelected}/>;
  if(task.isLoading||!valid)return <Spin/>;
- if(task.error||!task.data)return <Alert type="error" title={errorMessage(task.error)}/>;
- return <>{items.length>1&&<Button onClick={()=>void switchPatient()} style={{marginBottom:16}}>切换患者</Button>}{error&&<Alert type="error" title={error}/>}<PatientTaskForm key={`${token}:${selected}:${task.data.form_version_id}:${reload}`} task={task.data} entryToken={token!} onSaved={refresh} onReload={reloadTask} onDirtyChange={setDirty}/></>
+ if(!task.data||(task.error&&!temporary(task.error)))return <Alert type="error" title={errorMessage(task.error)}/>;
+ const queryError=choices.error||task.error;
+ return <>{items.length>1&&<Button onClick={()=>void switchPatient()} style={{marginBottom:16}}>切换患者</Button>}{queryError&&<Alert type="error" title={errorMessage(queryError)} description="暂时无法刷新，当前填写内容已保留。" action={<Button onClick={()=>{void choices.refetch();void task.refetch()}}>重试查询</Button>}/>} {error&&<Alert type="error" title={error}/>}<PatientTaskForm key={`${token}:${selected}:${task.data.form_version_id}:${reload}`} task={task.data} entryToken={token!} onSaved={refresh} onReload={reloadTask} onDirtyChange={setDirty}/></>
 }
