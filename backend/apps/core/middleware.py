@@ -4,6 +4,7 @@ from .errors import ApiError
 class TenantContextMiddleware:
     def __init__(self,get_response):self.get_response=get_response
     def __call__(self,request):
+        if request.path.startswith('/api/patient/'):return self.get_response(request)
         request.actor=None
         # Historical session payloads never authenticate a global identity.
         if not request.session.get('principal'):return self.get_response(request)

@@ -51,3 +51,6 @@ from apps.patient_portal.staff_api import PatientAccessView
 urlpatterns += [path('api/patients/<uuid:patient_id>/portal-access/',PatientAccessView.as_view())]
 from apps.patient_portal.staff_api import PatientEntryOptionsView,PatientBindingEntryView,PatientEntryActionView
 urlpatterns += [path('api/forms/<uuid:form_id>/patient-entry-options/',PatientEntryOptionsView.as_view()),path('api/patient-form-bindings/<uuid:binding_id>/entry/',PatientBindingEntryView.as_view())]+[path('api/patient-form-entries/<uuid:entry_id>/'+action+'/',PatientEntryActionView.as_view(action=action)) for action in ['disable','regenerate']]
+
+from apps.patient_portal.auth_api import PatientCsrfView,PatientEntryResolveView,PatientLoginView,PatientMeView,PatientChangePasswordView,PatientLogoutView
+urlpatterns += [path('api/patient/csrf/',PatientCsrfView.as_view()),path('api/patient/entry/resolve/',PatientEntryResolveView.as_view())]+[path('api/patient/auth/'+name+'/',view.as_view()) for name,view in [('login',PatientLoginView),('me',PatientMeView),('change-password',PatientChangePasswordView),('logout',PatientLogoutView)]]
