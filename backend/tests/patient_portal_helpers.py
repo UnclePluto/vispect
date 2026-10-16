@@ -2,7 +2,7 @@ from types import SimpleNamespace
 from rest_framework.test import APIClient
 
 
-def portal_world(world,optional=False):
+def portal_world(world,optional=False,definition=None):
     from apps.patient_portal.access import open_patient_access
     from apps.patient_portal.entries import get_or_create_entry
     actor=world.actor('a','doctor')
@@ -10,13 +10,13 @@ def portal_world(world,optional=False):
         import uuid
         from apps.core.context import tenant_transaction
         from apps.followups.enrollments import add_subject,confirm_enrollment
-        study=world.study('a');patient=world.patient('a')
+        study=world.study('a',definition=definition);patient=world.patient('a')
         with tenant_transaction(actor.tenant_id):binding=study.stages.get(kind='baseline').bindings.first()
         binding.required=False;world.owner_save(binding)
         enrollment=add_subject(actor,study.id,patient.id,actor.doctor_id,uuid.uuid4().hex,uuid.uuid4().hex)
         enrollment=confirm_enrollment(actor,enrollment.id,uuid.uuid4().hex,enrollment.added_on,uuid.uuid4().hex)
         with tenant_transaction(actor.tenant_id):visit=enrollment.current_visit;binding=visit.stage.bindings.select_related('form_version__form').first()
-    else:enrollment,visit,binding=world.entry('a')
+    else:enrollment,visit,binding=world.entry('a',definition=definition)
     access=open_patient_access(actor,enrollment.patient_id,'13800000001',1)
     entry=get_or_create_entry(actor,binding.id)
     return SimpleNamespace(enrollment=enrollment,visit=visit,binding=binding,access=access,entry=entry,actor=actor)

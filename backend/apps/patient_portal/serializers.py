@@ -10,3 +10,8 @@ class StrictSerializer(serializers.Serializer):
 class OpenAccessSerializer(StrictSerializer):
     phone=serializers.CharField(max_length=40)
     expected_revision=serializers.IntegerField(min_value=1)
+
+class PatientAnswerWriteSerializer(StrictSerializer):
+    action=serializers.ChoiceField(choices=['draft','submit'])
+    answers=serializers.JSONField()
+    expected_revision=serializers.IntegerField(min_value=0)

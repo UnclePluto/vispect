@@ -56,3 +56,5 @@ from apps.patient_portal.auth_api import PatientCsrfView,PatientEntryResolveView
 urlpatterns += [path('api/patient/csrf/',PatientCsrfView.as_view()),path('api/patient/entry/resolve/',PatientEntryResolveView.as_view())]+[path('api/patient/auth/'+name+'/',view.as_view()) for name,view in [('login',PatientLoginView),('me',PatientMeView),('change-password',PatientChangePasswordView),('logout',PatientLogoutView)]]
 from apps.patient_portal.task_api import PatientTasksResolveView,PatientTaskDetailView
 urlpatterns += [path('api/patient/tasks/resolve/',PatientTasksResolveView.as_view()),path('api/patient/entries/<str:token>/patients/<uuid:patient_id>/',PatientTaskDetailView.as_view())]
+from apps.patient_portal.task_api import PatientTaskAnswersView
+urlpatterns += [path('api/patient/entries/<str:token>/patients/<uuid:patient_id>/answers/',PatientTaskAnswersView.as_view())]
