@@ -31,7 +31,7 @@ class PatientBindingEntryView(APIView):
         actor=current_actor(request)
         binding=get_object(FormBinding.objects.filter(tenant_id=actor.tenant_id,respondent='patient',stage__study_id__in=visible_studies(actor).values('id')).exclude(stage__kind='screening'),binding_id)
         entry=PatientFormEntry.objects.filter(binding_id=binding.id).first()
-        return Response(entry_payload(entry) if entry else None)
+        return Response({'entry':entry_payload(entry) if entry else None})
     def post(self,request,binding_id):
         if request.data:raise ApiError('forbidden_fields','此操作不接受附加字段',status=400)
         return Response(entry_payload(get_or_create_entry(current_actor(request),binding_id)))

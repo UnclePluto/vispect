@@ -80,3 +80,11 @@ def test_unrelated_study_does_not_appear_in_candidates(world):
     from apps.patient_portal.entries import entry_candidates
     actor=Actor(other.account_id,other.tenant_id,'doctor',other.id)
     with tenant_transaction(actor.tenant_id):assert list(entry_candidates(actor,form_id))==[]
+
+
+def test_empty_entry_response_has_explicit_json_envelope(world):
+    _,_,binding=world.entry('a');client=world.login('a','doctor')
+    response=client.get(f'/api/patient-form-bindings/{binding.id}/entry/')
+    assert response.status_code==200
+    assert response.content,'入口未生成也必须返回有效JSON，不能返回空正文'
+    assert response.json()=={'entry':None}
