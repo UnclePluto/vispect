@@ -49,3 +49,5 @@ urlpatterns += [path('api/platform/accounts/',GlobalAccountsView.as_view()),path
 
 from apps.patient_portal.staff_api import PatientAccessView
 urlpatterns += [path('api/patients/<uuid:patient_id>/portal-access/',PatientAccessView.as_view())]
+from apps.patient_portal.staff_api import PatientEntryOptionsView,PatientBindingEntryView,PatientEntryActionView
+urlpatterns += [path('api/forms/<uuid:form_id>/patient-entry-options/',PatientEntryOptionsView.as_view()),path('api/patient-form-bindings/<uuid:binding_id>/entry/',PatientBindingEntryView.as_view())]+[path('api/patient-form-entries/<uuid:entry_id>/'+action+'/',PatientEntryActionView.as_view(action=action)) for action in ['disable','regenerate']]
