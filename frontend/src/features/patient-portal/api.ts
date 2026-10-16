@@ -1,0 +1,11 @@
+import {patientApi} from './client';
+import type {PatientAuthEnvelope,PatientTaskChoice,PatientTaskPayload,PatientAnswer} from './types';
+import type {JSONValue} from '../../form-engine/types';
+export const getPatientIdentity=(signal?:AbortSignal)=>patientApi<PatientAuthEnvelope>('/api/patient/auth/me/',{signal});
+export const resolveEntry=(entry_token:string,signal?:AbortSignal)=>patientApi<{available:boolean}>('/api/patient/entry/resolve/',{method:'POST',body:{entry_token},signal});
+export const patientLogin=(entry_token:string,phone:string,password:string)=>patientApi<PatientAuthEnvelope>('/api/patient/auth/login/',{method:'POST',body:{entry_token,phone,password}});
+export const changePatientPassword=(old_password:string,new_password:string)=>patientApi<PatientAuthEnvelope>('/api/patient/auth/change-password/',{method:'POST',body:{old_password,new_password}});
+export const patientLogout=()=>patientApi<{ok:boolean}>('/api/patient/auth/logout/',{method:'POST',body:{}});
+export const resolveTasks=(entry_token:string,signal?:AbortSignal)=>patientApi<{count:number;results:PatientTaskChoice[]}>('/api/patient/tasks/resolve/',{method:'POST',body:{entry_token},signal});
+export const getTask=(token:string,patient:string,signal?:AbortSignal)=>patientApi<PatientTaskPayload>(`/api/patient/entries/${encodeURIComponent(token)}/patients/${encodeURIComponent(patient)}/`,{signal});
+export const writeTask=(token:string,patient:string,answers:Record<string,JSONValue>,action:'draft'|'submit',expected_revision:number,key?:string)=>patientApi<PatientAnswer>(`/api/patient/entries/${encodeURIComponent(token)}/patients/${encodeURIComponent(patient)}/answers/`,{method:'POST',body:{answers,action,expected_revision},idempotencyKey:key});
