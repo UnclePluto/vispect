@@ -1,4 +1,4 @@
-# 多租户健康管理平台首版实施计划
+# 智观云健康管理平台首版实施计划
 
 > **执行代理须知：** 必须使用 `superpowers:subagent-driven-development` 或 `superpowers:executing-plans`，逐任务执行本计划。执行方法由用户评审本计划后选择。步骤使用 `- [ ]` 跟踪，先验证失败，再实现并验证通过，每个任务形成独立提交。
 
