@@ -1,3 +1,5 @@
+from .authorship import set_answer_recorder,stamp_answer_submission
+from .revision_policy import revision_policy
 from django.utils import timezone
 from apps.core.permissions import require_tenant
 from apps.core.helpers import get_object,ensure_revision
@@ -44,7 +46,7 @@ def save_answer_draft(actor,visit_id,binding_id,answers,expected_revision):
         if answer:
             ensure_revision(answer,expected_revision)
             if answer.status=='submitted':raise ApiError('answer_submitted','已提交答案请进入修订流程')
-            answer.answers=clean;answer.recorded_by_id=actor.account_id;answer.revision+=1;answer.save()
+            answer.answers=clean;set_answer_recorder(answer,staff_id=actor.account_id);answer.revision+=1;answer.save()
         else:
             if expected_revision!=0:raise ApiError('revision_conflict','答案草稿已变化，请刷新后重试')
             answer=Answer.objects.create(**answer_values(actor,visit,binding,clean))
@@ -60,9 +62,9 @@ def submit_answer(actor,visit_id,binding_id,answers,key,expected_revision=0):
             if answer:ensure_revision(answer,expected_revision)
             elif expected_revision!=0:raise ApiError('revision_conflict','答案草稿已变化，请刷新后重试')
             if answer and answer.status=='submitted':raise ApiError('answer_submitted','已提交答案不能覆盖，请填写修订原因')
-            if answer:answer.answers=clean;answer.recorded_by_id=actor.account_id;answer.revision+=1
+            if answer:answer.answers=clean;set_answer_recorder(answer,staff_id=actor.account_id);answer.revision+=1
             else:answer=Answer(**answer_values(actor,visit,binding,clean))
-            answer.status='submitted';answer.submitted_at=timezone.now();answer.save();audit(actor,'submit','answer',answer.id,{'visit_id':str(visit.id),'binding_id':str(binding.id),'is_proxy':answer.is_proxy});return {'id':str(answer.id)}
+            answer.status='submitted';stamp_answer_submission(answer);answer.submitted_at=timezone.now();answer.save();audit(actor,'submit','answer',answer.id,{'visit_id':str(visit.id),'binding_id':str(binding.id),'is_proxy':answer.is_proxy});return {'id':str(answer.id)}
         result=run_idempotent(actor,key,'submit_answer',{'visit_id':str(visit_id),'binding_id':str(binding_id),'answers':answers,'expected_revision':expected_revision},mutation)
         return get_object(visible_answers(actor),result['id'])
     return mutate_with_quota(actor,'studies',operation,delta=0)
@@ -71,10 +73,13 @@ def revise_answer(actor,answer_id,answers,reason,expected_revision):
     require_tenant(actor)
     if not isinstance(reason,str) or not reason.strip() or len(reason)>10000:raise ApiError('revision_reason_required','修订必须填写有效原因',{'reason':['请填写修订原因']},400)
     def mutation():
-        visible=get_object(visible_answers(actor),answer_id);visit,e,study=locked_visit(actor,visible.visit_id);require_writable(visit,e,study)
+        visible=get_object(visible_answers(actor),answer_id);visit,e,study=locked_visit(actor,visible.visit_id)
+        visible.visit=visit;visit.enrollment=e;e.study=study
+        allowed,block_reason=revision_policy(actor,visible)
+        if not allowed:raise ApiError('answer_read_only',block_reason,status=409)
         binding=writable_binding(actor,visit,visible.binding_id);answer=get_object(visible_answers(actor),answer_id,True);ensure_revision(answer,expected_revision)
         if answer.status!='submitted':raise ApiError('answer_not_submitted','草稿请直接编辑保存')
         clean=evaluated(binding,answers,'submit')
-        AnswerRevision.objects.create(tenant_id=actor.tenant_id,answer=answer,previous_answers=answer.answers,previous_revision=answer.revision,previous_recorded_by_id=answer.recorded_by_id,actor_id=actor.account_id,reason=reason.strip())
-        answer.answers=clean;answer.recorded_by_id=actor.account_id;answer.revision+=1;answer.save();audit(actor,'revise','answer',answer.id,{'reason':reason.strip(),'revision':answer.revision});return answer
+        AnswerRevision.objects.create(tenant_id=actor.tenant_id,answer=answer,previous_answers=answer.answers,previous_revision=answer.revision,previous_recorded_by_id=answer.recorded_by_id,previous_recorded_by_patient_id=answer.recorded_by_patient_id,new_answers=clean,actor_id=actor.account_id,reason=reason.strip())
+        answer.answers=clean;set_answer_recorder(answer,staff_id=actor.account_id);answer.revision+=1;answer.save();audit(actor,'revise','answer',answer.id,{'reason':reason.strip(),'revision':answer.revision});return answer
     return mutate_with_quota(actor,'studies',mutation,delta=0)

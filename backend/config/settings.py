@@ -10,8 +10,8 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
-INSTALLED_APPS = ["django.contrib.contenttypes", "django.contrib.auth", "django.contrib.sessions", "rest_framework", "apps.core", "apps.tenants", "apps.accounts", "apps.doctors", "apps.patients", "apps.forms", "apps.studies", "apps.followups"]
-MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "apps.core.middleware.TenantContextMiddleware"]
+INSTALLED_APPS = ["django.contrib.contenttypes", "django.contrib.auth", "django.contrib.sessions", "rest_framework", "apps.core", "apps.tenants", "apps.accounts", "apps.doctors", "apps.patients", "apps.forms", "apps.studies", "apps.followups", "apps.patient_portal"]
+MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "apps.patient_portal.middleware.PatientPortalMiddleware", "apps.core.middleware.TenantContextMiddleware"]
 def database_url(key,role,password_key):
     if os.environ.get(key):return os.environ[key]
     password=quote(os.environ[password_key],safe='')
@@ -46,3 +46,5 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME':'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME':'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+PATIENT_SESSION_COOKIE_NAME = os.environ.get('PATIENT_SESSION_COOKIE_NAME','vispect_patient_session')

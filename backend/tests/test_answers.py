@@ -14,12 +14,13 @@ def test_submission_retry_does_not_overwrite_answer(world):
     with pytest.raises(ApiError):submit_answer(a,v.id,b.id,{'q1':'覆盖'},'new-key')
     with pytest.raises(ApiError):save_answer_draft(a,v.id,b.id,{'q1':'覆盖'},first.revision)
 
-def test_completed_visit_answers_are_read_only(world):
+def test_completed_patient_answer_allows_audited_revision_but_no_resubmit(world):
     from apps.followups.answers import submit_answer,revise_answer
     from apps.followups.transitions import complete_visit
     e,v,b=world.entry('a');a=world.actor('a','doctor');answer=submit_answer(a,v.id,b.id,{'q1':'原答案'},'submit');complete_visit(a,v.id,'complete')
     client=world.login('a','doctor');response=world.post(client,f'/api/answers/{answer.id}/revise/',{'answers':{'q1':'新答案'},'reason':'纠正','expected_revision':answer.revision})
-    assert response.status_code==409
+    assert response.status_code==200
+    assert response.json()['answers']=={'q1':'新答案'}
     with pytest.raises(ApiError):submit_answer(a,v.id,b.id,{'q1':'原答案'},'submit')
 
 def test_revision_keeps_previous_answer_and_requires_reason(world):

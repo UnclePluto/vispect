@@ -9,5 +9,11 @@ def visit_payload(v,detail=False):
     if detail:data['bindings']=[{'id':str(b.id),'form_version_id':str(b.form_version_id),'definition':b.form_version.definition,'form_paused':b.form_version.form.paused,'respondent':b.respondent,'required':b.required} for b in v.stage.bindings.select_related('form_version__form')]
     return data
 
-def answer_payload(answer):
-    return {'id':str(answer.id),'visit_id':str(answer.visit_id),'binding_id':str(answer.binding_id),'form_version_id':str(answer.form_version_id),'respondent':answer.respondent,'is_proxy':answer.is_proxy,'recorded_by_id':str(answer.recorded_by_id),'recorded_by_name':answer.recorded_by.name,'answers':answer.answers,'status':answer.status,'revision':answer.revision,'submitted_at':answer.submitted_at.isoformat() if answer.submitted_at else None,'updated_at':answer.updated_at.isoformat()}
+def recorder_name(staff,patient_identity):
+    return staff.name if staff else f'患者账号（尾号 {patient_identity.phone[-4:]}）' if patient_identity else '—'
+
+
+def answer_payload(answer,actor=None):
+    from .revision_policy import revision_policy
+    allowed,reason=revision_policy(actor,answer) if actor else (False,None)
+    return {'can_revise':allowed,'revise_block_reason':reason,'id':str(answer.id),'visit_id':str(answer.visit_id),'binding_id':str(answer.binding_id),'form_version_id':str(answer.form_version_id),'respondent':answer.respondent,'is_proxy':answer.is_proxy,'recorded_by_kind':'patient' if answer.recorded_by_patient_id else 'staff','recorded_by_id':str(answer.recorded_by_id) if answer.recorded_by_id else None,'recorded_by_patient_id':str(answer.recorded_by_patient_id) if answer.recorded_by_patient_id else None,'recorded_by_name':recorder_name(answer.recorded_by,answer.recorded_by_patient),'submission_source':answer.submission_source,'submitted_by_id':str(answer.submitted_by_id) if answer.submitted_by_id else None,'submitted_by_patient_id':str(answer.submitted_by_patient_id) if answer.submitted_by_patient_id else None,'submitted_by_name':recorder_name(answer.submitted_by,answer.submitted_by_patient),'answers':answer.answers,'status':answer.status,'revision':answer.revision,'submitted_at':answer.submitted_at.isoformat() if answer.submitted_at else None,'updated_at':answer.updated_at.isoformat()}

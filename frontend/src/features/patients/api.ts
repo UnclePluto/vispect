@@ -1,8 +1,9 @@
+import type {PatientAccessPayload} from '../patient-access/api';
 import type {Enrollment} from '../followups/api';
 import {api} from '../../api/client';
 import type {Page,Revision} from '../../api/types';
-export type Patient=Revision&{code:string;name:string;gender:string;birth_date:string|null;age:number|null;phone:string;notes:string;status:string;doctors:{id:string;name:string}[];deleted_at:string|null;enrollments?:Enrollment[]};
-export type PatientValues={code:string;name:string;gender?:string;birth_date?:string|null;phone?:string;notes?:string;status?:string;doctor_ids?:string[]};
+export type Patient=Revision&{portal_access?:PatientAccessPayload|null;code:string;name:string;gender:string;birth_date:string|null;age:number|null;phone:string;notes:string;status:string;doctors:{id:string;name:string}[];deleted_at:string|null;enrollments?:Enrollment[]};
+export type PatientValues={enable_patient_portal?:boolean;login_phone?:string;code:string;name:string;gender?:string;birth_date?:string|null;phone?:string;notes?:string;status?:string;doctor_ids?:string[]};
 export const getPatients=(page:number,search:string,status?:string,doctor?:string)=>api<Page<Patient>>(`/api/patients/?${new URLSearchParams({page:String(page),search,...(status?{status}:{}),...(doctor?{doctor_id:doctor}:{})})}`);
 export const getPatient=(id:string)=>api<Patient>(`/api/patients/${id}/`);
 export const createPatient=(body:PatientValues)=>api<Patient>('/api/patients/',{method:'POST',body});

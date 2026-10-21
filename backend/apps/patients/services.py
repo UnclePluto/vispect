@@ -25,7 +25,11 @@ def create_patient(actor,data):
     def mutation():
         doctors=validate_doctors(actor,[actor.doctor_id] if actor.role=='doctor' else data.get('doctor_ids',[]))
         patient=Patient.objects.create(tenant_id=actor.tenant_id,**{k:v for k,v in data.items() if k in FIELDS})
-        replace_doctors(actor,patient,doctors);audit(actor,'create','patient',patient.id,{'code':patient.code})
+        replace_doctors(actor,patient,doctors)
+        if data.get('enable_patient_portal'):
+            from apps.patient_portal.access import bind_patient_login
+            bind_patient_login(actor,patient,data.get('login_phone',''))
+        audit(actor,'create','patient',patient.id,{'code':patient.code})
         return patient
     return mutate_with_quota(actor,'patients',mutation)
 
